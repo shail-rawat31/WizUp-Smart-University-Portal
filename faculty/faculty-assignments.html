@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Assignments & Grading - WizUP Faculty</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/premium-dashboard.css" />
+    <style>
+        body { margin: 0; background-color: #050505; color: #fff; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; background: rgba(5, 5, 8, 0.9); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0, 230, 118, 0.2); position: sticky; top: 0; z-index: 100; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand i { font-size: 28px; color: #00e676; text-shadow: 0 0 15px rgba(0,230,118,0.5); }
+        .brand h1 { font-family: 'Outfit'; font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .back-btn { color: #00e676; text-decoration: none; font-size: 13px; font-weight: 700; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .back-btn:hover { color: #fff; transform: translateX(-5px); }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .page-title { font-family: 'Outfit'; font-size: 32px; font-weight: 900; margin-bottom: 30px; display: flex; align-items: center; gap: 12px; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { padding: 15px 20px; color: #8892b0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .data-table td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; color: #e2e8f0; }
+        .data-table tr:hover td { background: rgba(0, 230, 118, 0.05); }
+        
+        
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand"><i class="fa-solid fa-list-check"></i><h1>WizUP Faculty Hub</h1></div>
+        <a href="faculty-dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Hub</a>
+    </div>
+    <div class="container">
+        <h2 class="page-title"><i class="fa-solid fa-list-check" style="color: #00e676;"></i> Assignments & Grading</h2>
+        <div style="text-align: right; margin-bottom: 20px;"><button style="padding: 12px 24px;"><i class="fa-solid fa-plus"></i> Create Assignment</button></div>
+        <div class="card" style="padding: 0;">
+            <table class="data-table">
+                <tr><th>Assignment Title</th><th>Target Audience</th><th>Due Date</th><th>Submissions</th><th>Actions</th></tr>
+                <tr><td>Lab Assignment 1: Recursion</td><td>MCA Sem 2</td><td>10 Apr 2026</td><td>45/60</td><td><button style="padding: 6px 12px; font-size:11px; border-color:#00d2ff!important; color:#00d2ff!important;">Evaluate</button></td></tr>
+                <tr><td>Mini Project Proposal</td><td>MCA Sem 3</td><td>15 Apr 2026</td><td>10/40</td><td><button style="padding: 6px 12px; font-size:11px;">View Details</button></td></tr>
+            </table>
+        </div>
+    </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        // Enforce DB role requirement preventing unauthorized navigation
+        await requireAuth(['faculty']);
+    });
+</script>
+
+</body>
+</html>

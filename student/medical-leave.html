@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical Leave - WizUP</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --card: rgba(10, 10, 15, 0.85);
+      --border: rgba(229, 56, 59, 0.2);
+      --glass: rgba(255, 255, 255, 0.03);
+      --text: #e2e8f0;
+      --muted: #8892b0;
+      --brand: #e5383b;
+      --success: #22c55e;
+      --warn: #f59e0b;
+    }
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background: url("../assets/images/bg1.jpg") center/cover no-repeat fixed;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+    .overlay { position: fixed; inset: 0; background: radial-gradient(circle at 70% 40%, rgba(0,0,0,0.2), rgba(0,0,0,0.95)); pointer-events: none; z-index: 0; }
+    
+    .topbar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 14px; padding: 15px 30px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .logo { width: 44px; height: 44px; border-radius: 12px; background: #000; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
+    .logo img { width: 70%; }
+    .t-title h1 { font-family: 'Outfit'; font-size: 18px; font-weight: 800; letter-spacing: 1px; color: #fff; }
+    .t-title p { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+    
+    .spacer { flex: 1; }
+    .nav-btn { color: #fca5a5; text-decoration: none; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+    .nav-btn:hover { color: #fff; transform: translateX(-5px); }
+
+    .container { width: min(1140px, 95vw); margin: 30px auto; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 24px; position: relative; z-index: 1; }
+    
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; backdrop-filter: blur(24px); box-shadow: 0 15px 45px rgba(0,0,0,0.5); overflow: hidden; }
+    .card-hd { padding: 18px 24px; background: rgba(229, 56, 59, 0.05); border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+    .card-hd h2 { font-family: 'Outfit'; font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+    .card-hd i { color: #fca5a5; }
+    .card-bd { padding: 24px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    label { display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+    input, select, textarea { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #fff; font-family: 'Inter'; font-size: 14px; outline: none; transition: 0.3s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--brand); background: rgba(255,255,255,0.06); box-shadow: 0 0 15px rgba(229, 56, 59, 0.2); }
+    
+    .btn-row { display: flex; gap: 12px; margin-top: 24px; }
+    .btn { flex: 1; padding: 14px; border: none; border-radius: 14px; font-family: 'Outfit'; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-primary { background: linear-gradient(45deg, #e5383b, #b21f2d); color: #fff; }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(229, 56, 59, 0.4); }
+    .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+
+    .workflow { display: flex; flex-direction: column; gap: 20px; }
+    .wf-step { display: flex; gap: 16px; padding: 16px; border-radius: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
+    .wf-step.active { border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.05); }
+    .wf-step.done { border-color: rgba(34, 197, 94, 0.4); background: rgba(34, 197, 94, 0.05); }
+    
+    .wf-dot { width: 12px; height: 12px; border-radius: 50%; background: #333; margin-top: 4px; flex-shrink: 0; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+    .wf-step.active .wf-dot { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
+    .wf-step.done .wf-dot { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+    
+    .wf-text h4 { font-family: 'Outfit'; font-size: 14px; margin-bottom: 4px; }
+    .wf-text p { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+    .stat-pill { flex:1; text-align:center; padding:12px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid rgba(255,255,255,0.05); }
+    .stat-val { font-family:'Outfit'; font-size:20px; font-weight:900; color:#fff; }
+    .stat-label { font-size:10px; color:var(--muted); text-transform:uppercase; font-weight:800; }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="topbar">
+    <div class="logo"><img src="../assets/images/LOGO1.png" alt="WizUP" /></div>
+    <div class="t-title"><h1>Medical Leave</h1><p>Health & Wellness Support Portal</p></div>
+    <div class="spacer"></div>
+    <a href="student-dashboard.html" class="nav-btn"><i class="fa-solid fa-house-chimney-medical"></i> Home</a>
+  </div>
+
+  <main class="container">
+    <div class="card">
+      <div class="card-hd"><h2><i class="fa-solid fa-notes-medical"></i> Medical Certificate Submission</h2></div>
+      <div class="card-bd">
+        <div class="form-grid">
+          <div>
+            <label>Leave Start Date</label>
+            <input type="date" id="fromDate" onchange="calcDays()" />
+          </div>
+          <div>
+            <label>Leave End Date</label>
+            <input type="date" id="toDate" onchange="calcDays()" />
+          </div>
+          <div style="grid-column: 1 / -1">
+            <label>Nature of Illness</label>
+            <input type="text" id="reason" placeholder="e.g. Viral Fever / Surgery Recovery" />
+          </div>
+          <div>
+            <label>Supportive Doc (PDF/JPG)</label>
+            <input type="file" id="medicalDoc" accept=".pdf,.jpg,.png" />
+          </div>
+          <div>
+            <label>Hospital/Clinic Name</label>
+            <input type="text" id="hospital" placeholder="Name of healthcare provider" />
+          </div>
+          <div style="grid-column: 1 / -1">
+            <label>Additional Notes</label>
+            <textarea id="notes" placeholder="Specify medications or specific rest advice..."></textarea>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="submitML()"><i class="fa-solid fa-shield-heart"></i> File Medical Leave</button>
+          <button class="btn btn-secondary" onclick="resetForm()">Clear Form</button>
+        </div>
+        
+        <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); display:flex; gap:16px;">
+            <div class="stat-pill">
+                <div class="stat-val" id="daysDisplay">0</div>
+                <div class="stat-label">Total Days</div>
+            </div>
+            <div class="stat-pill">
+                <div class="stat-val" style="color:#00e676;">Active</div>
+                <div class="stat-label">System Health</div>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h2><i class="fa-solid fa-vial"></i> Clinical Verification</h2></div>
+      <div class="card-bd">
+        <div class="workflow">
+          <div class="wf-step active" id="s1">
+            <div class="wf-dot"></div>
+            <div class="wf-text"><h4>Medical Proof Uploaded</h4><p>Your documents are currently queued for clinical verification.</p></div>
+          </div>
+          <div class="wf-step" id="s2">
+            <div class="wf-dot"></div>
+            <div class="wf-text"><h4>Chief Medical Officer Review</h4><p>Verification of authenticity and duration by the medical cell.</p></div>
+          </div>
+          <div class="wf-step" id="s3">
+            <div class="wf-dot"></div>
+            <div class="wf-text"><h4>Academic Reconciliation</h4><p>Presence adjusted in university logs based on ML count.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    async function init() {
+        await requireAuth(['student']);
+    }
+
+    function calcDays() {
+        const f = new Date(document.getElementById('fromDate').value);
+        const t = new Date(document.getElementById('toDate').value);
+        if(!isNaN(f) && !isNaN(t)) {
+            const diff = Math.ceil((t-f)/(1000*60*60*24)) + 1;
+            document.getElementById('daysDisplay').textContent = diff > 0 ? diff : 0;
+        }
+    }
+
+    async function submitML() {
+        const from = document.getElementById('fromDate').value;
+        const to = document.getElementById('toDate').value;
+        const reason = document.getElementById('reason').value;
+        const file = document.getElementById('medicalDoc').files[0];
+        
+        if(!from || !to || !reason || !file) {
+            showToast("Medical certificate is strictly required.", "error");
+            return;
+        }
+
+        showToast("Submitting Clinical Evidence...", "info");
+        setTimeout(() => {
+            showToast("Medical leave logged successfully!", "success");
+            document.getElementById('s1').className = "wf-step done";
+            document.getElementById('s2').className = "wf-step active";
+        }, 1200);
+    }
+
+    function resetForm() {
+        document.querySelectorAll('input, textarea').forEach(el => el.value = "");
+        document.getElementById('daysDisplay').textContent = "0";
+    }
+
+    init();
+  </script>
+</body>
+</html>

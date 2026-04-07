@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Document Services – WizUP Student</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--card:rgba(20,20,25,.72);--border:rgba(229,56,59,.15);--border2:rgba(255,255,255,.09);--muted:#8892b0;--brand:#e5383b;--brand2:#b21f2d}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;font-family:'Inter',sans-serif;background:url("../assets/images/bg1.jpg") center/cover no-repeat fixed;background-color:#050505;color:#fff}
+.overlay{position:fixed;inset:0;background:radial-gradient(circle at 70% 40%,rgba(0,0,0,.15),rgba(0,0,0,.82));pointer-events:none;z-index:0}
+.topbar{display:flex;align-items:center;gap:14px;padding:12px 24px;background:rgba(0,0,0,.82);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.logo{width:44px;height:44px;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.1);overflow:hidden}
+.logo img{width:75%}
+.t-title h1{margin:0;font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;letter-spacing:1px}
+.t-title p{margin:0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.spacer{flex:1}
+.nav-link{color:#fca5a5;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;transition:.2s}
+.nav-link:hover{color:#fff}
+.container{width:min(1100px,95vw);margin:30px auto;position:relative;z-index:1}
+.page-title{font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;margin-bottom:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);box-shadow:0 10px 30px rgba(0,0,0,.3);margin-bottom:20px;overflow:hidden}
+.card-hd{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;background:rgba(229,56,59,.05)}
+.card-hd h2{font-family:'Outfit',sans-serif;font-size:15px;font-weight:800}
+.card-bd{padding:20px}
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.doc-card{padding:20px;border:1px solid var(--border2);border-radius:12px;background:rgba(0,0,0,.3);transition:.25s;cursor:pointer}
+.doc-card:hover{border-color:rgba(229,56,59,.45);background:rgba(229,56,59,.07);transform:translateY(-3px)}
+.doc-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px}
+.doc-name{font-size:15px;font-weight:700;margin-bottom:4px}
+.doc-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.doc-meta{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted)}
+.btn{background:var(--brand);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px;font-family:'Inter',sans-serif}
+.btn:hover{background:var(--brand2)}
+.btn.outline{background:none;border:1px solid var(--border2);color:#fff}
+.btn.outline:hover{border-color:var(--brand);background:rgba(229,56,59,.08)}
+.status-badge{padding:3px 9px;border-radius:99px;font-size:10px;font-weight:700}
+.s-pending{background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
+.s-ready{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+.s-rejected{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;margin-bottom:6px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 13px;border-radius:10px;border:1px solid var(--border2);background:rgba(0,0,0,.45);color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:.2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(229,56,59,.15)}
+.form-group select option{background:#111}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100;opacity:0;transition:.2s}
+.modal-overlay.open{display:flex;opacity:1}
+.modal{background:#111;border:1px solid var(--border);border-radius:18px;padding:28px;width:480px;max-width:94vw;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 14px;font-size:11px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2);font-weight:700}
+td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+tr:hover td{background:rgba(255,255,255,.02)}
+</style>
+</head>
+<body>
+<div class="overlay"></div>
+<div class="topbar">
+  <div class="logo"><img src="../assets/images/LOGO1.png" alt="WizUP"/></div>
+  <div class="t-title"><h1>Document Services</h1><p>Official certificate requests</p></div>
+  <div class="spacer"></div>
+  <a href="student-dashboard.html" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+</div>
+<div class="container">
+  <h2 class="page-title">Document Services</h2>
+
+  <!-- Available Documents -->
+  <div class="card">
+    <div class="card-hd"><h2><i class="fa-solid fa-file-circle-plus" style="color:#fca5a5;margin-right:8px"></i>Request a Document</h2></div>
+    <div class="card-bd">
+      <div class="doc-grid" id="docGrid">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- My Requests -->
+  <div class="card">
+    <div class="card-hd">
+      <h2><i class="fa-solid fa-clock-rotate-left" style="color:#fca5a5;margin-right:8px"></i>My Requests</h2>
+      <button class="btn outline" onclick="clearRequests()"><i class="fa-solid fa-trash"></i> Clear Demo</button>
+    </div>
+    <div class="card-bd" style="padding:0">
+      <table>
+        <thead><tr><th>Document</th><th>Requested On</th><th>Purpose</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="requestsTable"><tr><td colspan="5" style="text-align:center;padding:28px;color:var(--muted)"><i class="fa-solid fa-inbox" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>No requests yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Request Modal -->
+<div class="modal-overlay" id="reqModal">
+  <div class="modal">
+    <div class="modal-title" id="modalDocName">Bonafide Certificate</div>
+    <div class="modal-sub">Fill details — your request goes to the admin office</div>
+    <div class="form-group">
+      <label>Purpose</label>
+      <input id="reqPurpose" placeholder="e.g. Bank account opening, scholarship"/>
+    </div>
+    <div class="form-group">
+      <label>Addressed To</label>
+      <input id="reqAddressed" placeholder="e.g. Branch Manager, SBI"/>
+    </div>
+    <div class="form-group">
+      <label>Copies Required</label>
+      <select id="reqCopies"><option>1</option><option>2</option><option>3</option></select>
+    </div>
+    <div class="form-group">
+      <label>Additional Notes</label>
+      <textarea id="reqNotes" rows="2" placeholder="Any specific requirements…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn outline" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="submitRequest()"><i class="fa-solid fa-paper-plane"></i> Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL="https://vqxhbfbpqwpdbmgtdcik.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxeGhiZmJwcXdwZGJtZ3RkY2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTY1MTMsImV4cCI6MjA4NzM5MjUxM30.U9wuwWRDsUqKef93fl0C1DLu9l_hQ5zKMT9KhOt24xE";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const KEY='wizup.docRequests.v1';
+
+const DOCS=[
+  {id:'bonafide',name:'Bonafide Certificate',desc:'Confirms active enrollment. Required for bank, scholarship & govt schemes.',icon:'fa-solid fa-certificate',color:'rgba(56,189,248,.15)',iconColor:'#7dd3fc',eta:'2–3 working days'},
+  {id:'transfer',name:'Transfer Certificate',desc:'Official TC for leaving the institution or joining another.',icon:'fa-solid fa-file-export',color:'rgba(167,139,250,.15)',iconColor:'#c4b5fd',eta:'3–5 working days'},
+  {id:'noc',name:'No Objection Certificate',desc:'NOC for passport, visa, internship, higher studies abroad.',icon:'fa-solid fa-stamp',color:'rgba(34,197,94,.15)',iconColor:'#86efac',eta:'2–4 working days'},
+  {id:'transcript',name:'Official Transcript',desc:'Sealed academic transcript with all semester results.',icon:'fa-solid fa-scroll',color:'rgba(245,158,11,.15)',iconColor:'#fcd34d',eta:'5–7 working days'},
+  {id:'conduct',name:'Character Certificate',desc:'Certificate of good conduct from the HOD/Dean.',icon:'fa-solid fa-shield-halved',color:'rgba(229,56,59,.15)',iconColor:'#fca5a5',eta:'2–3 working days'},
+  {id:'fee',name:'Fee Receipt (Official)',desc:'Sealed official fee receipt for all paid semesters.',icon:'fa-solid fa-receipt',color:'rgba(251,191,36,.15)',iconColor:'#fde68a',eta:'Same day'},
+  {id:'rank',name:'Rank/Merit Certificate',desc:'Academic rank certificate for topper/merit list students.',icon:'fa-solid fa-trophy',color:'rgba(239,68,68,.15)',iconColor:'#fca5a5',eta:'3–4 working days'},
+  {id:'migration',name:'Migration Certificate',desc:'Required for joining a different university.',icon:'fa-solid fa-right-left',color:'rgba(99,102,241,.15)',iconColor:'#a5b4fc',eta:'7–10 working days'},
+];
+
+let activeDoc=null;
+let requests=[];
+try{requests=JSON.parse(localStorage.getItem(KEY)||'[]')}catch{}
+
+function renderDocs(){
+  document.getElementById('docGrid').innerHTML=DOCS.map(d=>`
+  <div class="doc-card" onclick="openReq('${d.id}')">
+    <div class="doc-icon" style="background:${d.color}"><i class="${d.icon}" style="color:${d.iconColor}"></i></div>
+    <div class="doc-name">${d.name}</div>
+    <div class="doc-desc">${d.desc}</div>
+    <div class="doc-meta"><span><i class="fa-solid fa-clock" style="margin-right:4px"></i>${d.eta}</span><button class="btn" style="padding:6px 12px;font-size:11px"><i class="fa-solid fa-plus"></i> Request</button></div>
+  </div>`).join('');
+}
+
+function renderRequests(){
+  const tbody=document.getElementById('requestsTable');
+  if(!requests.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--muted)"><i class="fa-solid fa-inbox" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>No requests yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML=requests.map(r=>`
+  <tr>
+    <td style="font-weight:600">${r.name}</td>
+    <td style="color:var(--muted)">${r.date}</td>
+    <td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.purpose}</td>
+    <td><span class="status-badge ${r.status==='ready'?'s-ready':r.status==='rejected'?'s-rejected':'s-pending'}">${r.status}</span></td>
+    <td>${r.status==='ready'?`<button class="btn" style="padding:5px 10px;font-size:11px" onclick="downloadCert('${r.id}','${r.name}')"><i class="fa-solid fa-download"></i> Download</button>`:'<span style="font-size:11px;color:var(--muted)">Processing…</span>'}</td>
+  </tr>`).join('');
+}
+
+function openReq(id){
+  activeDoc=DOCS.find(d=>d.id===id);
+  document.getElementById('modalDocName').textContent=activeDoc.name;
+  document.getElementById('reqPurpose').value='';
+  document.getElementById('reqAddressed').value='';
+  document.getElementById('reqNotes').value='';
+  document.getElementById('reqModal').classList.add('open');
+}
+function closeModal(){document.getElementById('reqModal').classList.remove('open')}
+
+function submitRequest(){
+  const purpose=document.getElementById('reqPurpose').value.trim();
+  if(!purpose){alert('Please enter a purpose.');return;}
+  const status=activeDoc.id==='fee'?'ready':'pending';
+  requests.unshift({id:activeDoc.id+'_'+Date.now(),name:activeDoc.name,date:new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),purpose,addressed:document.getElementById('reqAddressed').value,copies:document.getElementById('reqCopies').value,notes:document.getElementById('reqNotes').value,status});
+  localStorage.setItem(KEY,JSON.stringify(requests));
+  closeModal();
+  renderRequests();
+  if(status==='ready') alert(`${activeDoc.name} is ready to download!`);
+  else alert('Request submitted! You will be notified when it is ready.');
+}
+
+function clearRequests(){if(!confirm('Clear all demo requests?'))return;requests=[];localStorage.removeItem(KEY);renderRequests();}
+
+function downloadCert(id,name){
+  window.jsPDF=window.jspdf.jsPDF;
+  const doc=new jsPDF();
+  doc.setFillColor(229,56,59);doc.rect(0,0,210,28,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(18);doc.setFont('helvetica','bold');
+  doc.text('WizUP University',15,18);
+  doc.setTextColor(0,0,0);doc.setFontSize(15);doc.text(name.toUpperCase(),105,46,null,null,'center');
+  doc.setFontSize(11);doc.setFont('helvetica','normal');
+  doc.text('This is to certify that the student is enrolled at WizUP University.',15,62);
+  doc.text('This document is computer-generated and is valid without signature.',105,260,null,null,'center');
+  doc.save(`WizUP_${id}.pdf`);
+}
+
+renderDocs();
+renderRequests();
+</script>
+</body>
+</html>

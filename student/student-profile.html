@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Student Profile – WizUP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/premium-dashboard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { margin: 0; background-color: #050505; color: #fff; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); position: sticky; top: 0; z-index: 100; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand img { width: 40px; }
+        .brand h1 { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; }
+        .back-btn { color: #fca5a5; text-decoration: none; font-size: 13px; font-weight: 700; transition: transform 0.3s; display: flex; align-items: center; gap: 8px; }
+        .back-btn:hover { color: #fff; transform: translateX(-5px); }
+        
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+        
+        /* Profile Header */
+        .profile-hdr { display: flex; align-items: center; gap: 30px; position: relative; margin-bottom: 40px; }
+        .avatar-wrap { position: relative; width: 140px; height: 140px; }
+        .avatar { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, #e5383b, #ff758c); border: 4px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(229, 56, 59, 0.4); display: flex; align-items: center; justify-content: center; font-size: 40px; font-family: 'Outfit'; font-weight: 800; overflow: hidden; }
+        .cam-btn { position: absolute; bottom: 0; right: 0; width: 40px; height: 40px; background: #fff; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .cam-btn:hover { background: #00d2ff; transform: scale(1.1); }
+        
+        .p-info h2 { font-family: 'Outfit'; font-size: 38px; font-weight: 900; background: linear-gradient(90deg, #fff, #b21f2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+        .p-info p { font-size: 14px; color: #8892b0; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+        .p-info .badge { display: inline-block; padding: 6px 12px; background: rgba(0, 210, 255, 0.15); border: 1px solid rgba(0, 210, 255, 0.3); color: #00d2ff; border-radius: 99px; font-size: 11px; margin-top: 12px; }
+        
+        .p-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
+        
+        .card-header { font-family: 'Outfit'; font-size: 18px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 11px; color: #8892b0; font-weight: 800; text-transform: uppercase; }
+        .form-group input { padding: 14px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-family: 'Inter'; font-size: 14px; transition: 0.3s; }
+        .form-group input:focus { border-color: #e5383b; box-shadow: 0 0 10px rgba(229,56,59,0.3); outline: none; }
+        .full-width { grid-column: 1 / -1; }
+        
+        .save-btn { padding: 16px 20px; background: linear-gradient(45deg, #e5383b, #b21f2d); border: none; border-radius: 12px; color: #fff; font-weight: 800; font-family: 'Outfit'; letter-spacing: 1px; cursor: pointer; float: right; margin-top: 20px; width: 100%; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .save-btn:hover { box-shadow: 0 10px 30px rgba(229,56,59,0.4); transform: translateY(-3px); }
+        .save-btn:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand">
+            <img src="../assets/images/LOGO1.png" alt="WizUP" />
+            <h1>Account Center</h1>
+        </div>
+        <a href="student-dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Hub</a>
+    </div>
+    
+    <div class="container">
+        <div class="profile-hdr">
+            <div class="avatar-wrap">
+                <div class="avatar" id="avatarLetter">S</div>
+            </div>
+            <div class="p-info">
+                <h2 id="fullNameDisplay">Loading...</h2>
+                <p>Roll No: <span id="rollNoDisplay">#</span> &nbsp;|&nbsp; Dept: <span id="deptDisplay">—</span></p>
+                <div class="badge"><i class="fa-solid fa-check-circle"></i> Student Portal Active</div>
+            </div>
+        </div>
+        
+        <div class="p-grid">
+            <div class="card" style="padding: 30px; background: rgba(255,255,255,0.02); border-radius: 24px; border: 1px solid rgba(255,255,255,0.08);">
+                <div class="card-header">Personal Information <i class="fa-solid fa-user-pen"></i></div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="fName" placeholder="Your Name" />
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" id="dob" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Email Address</label>
+                        <input type="email" id="email" disabled />
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phone" placeholder="Contact number" />
+                    </div>
+                    <div class="form-group">
+                        <label>Blood Group</label>
+                        <input type="text" id="blood" placeholder="e.g. O+" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Residential Address</label>
+                        <input type="text" id="address" placeholder="Full address" />
+                    </div>
+                </div>
+                <button class="save-btn" id="updateBtn">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Sync Profile Settings
+                </button>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="card" style="padding: 30px; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
+                    <div class="card-header">Academic Summary <i class="fa-solid fa-graduation-cap"></i></div>
+                    <div id="academicMeta" style="display: flex; flex-direction: column; gap: 15px;">
+                        <p style="font-size: 13px; color: #8892b0;">Semester VI • Core Department</p>
+                        <div style="display: flex; justify-content: space-between; font-weight: 800; font-family: 'Outfit';">
+                            <span>Attendance Score</span>
+                            <span id="attPctDisplay" style="color: #00e676;">--%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="padding: 24px; text-align: center; border-color: rgba(229, 56, 59, 0.2) !important;">
+                    <i class="fa-solid fa-fingerprint" style="font-size: 32px; color: #e5383b; margin-bottom: 12px;"></i>
+                    <h3 style="font-family: 'Outfit'; margin: 0 0 10px 0;">Sign Out Securely</h3>
+                    <p style="font-size: 11px; color: #8892b0; margin-bottom: 16px;">Logout to end your active session on this device.</p>
+                    <button class="save-btn" style="background: rgba(229, 56, 59, 0.1); border: 1px solid #e5383b; color: #e5383b;" onclick="signOut()">Logout Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="../assets/js/supabase.js"></script>
+<script>
+    let currentUid = null;
+
+    async function init() {
+        const profile = await requireAuth(['student']);
+        if(!profile) return;
+        currentUid = profile.id;
+
+        // Display Header
+        document.getElementById('fullNameDisplay').textContent = profile.full_name;
+        document.getElementById('rollNoDisplay').textContent = profile.roll_no || 'N/A';
+        document.getElementById('deptDisplay').textContent = profile.department || 'Core';
+        document.getElementById('avatarLetter').textContent = (profile.full_name[0]||'S').toUpperCase();
+
+        // Fill Form
+        document.getElementById('fName').value = profile.full_name || '';
+        document.getElementById('dob').value = profile.dob || '';
+        document.getElementById('email').value = profile.email || '';
+        document.getElementById('phone').value = profile.phone || '';
+        document.getElementById('blood').value = profile.blood_group || '';
+        document.getElementById('address').value = profile.address || '';
+
+        // Load Attendance Stats
+        loadStats();
+    }
+
+    async function loadStats() {
+        const { data } = await db.from('attendance_summary').select('attended, total_classes').eq('student_id', currentUid);
+        if(data && data.length) {
+            const totAtt = data.reduce((a,b) => a + b.attended, 0);
+            const totCls = data.reduce((a,b) => a + b.total_classes, 0);
+            const pct = totCls > 0 ? (totAtt/totCls*100).toFixed(1) : 0;
+            document.getElementById('attPctDisplay').textContent = pct + '%';
+        }
+    }
+
+    document.getElementById('updateBtn').onclick = async () => {
+        const btn = document.getElementById('updateBtn');
+        const name = document.getElementById('fName').value;
+        const dob = document.getElementById('dob').value;
+        const phone = document.getElementById('phone').value;
+        const blood = document.getElementById('blood').value;
+        const address = document.getElementById('address').value;
+
+        if(!name) return showToast("Full Name is required", "error");
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
+
+        const { error } = await db.from('profiles').update({
+            full_name: name,
+            dob: dob,
+            phone: phone,
+            blood_group: blood,
+            address: address
+        }).eq('id', currentUid);
+
+        if(error) {
+            showToast("Failed to update profile: " + error.message, "error");
+            btn.innerHTML = 'Retry Sync';
+            btn.disabled = false;
+        } else {
+            showToast("Profile identity updated successfully!", "success");
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Profile Synced';
+            document.getElementById('fullNameDisplay').textContent = name;
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Sync Profile Settings';
+                btn.disabled = false;
+            }, 2000);
+        }
+    };
+
+    async function signOut() {
+        await db.auth.signOut();
+        window.location.href = "../index.html";
+    }
+
+    init();
+</script>
+</body>
+</html>

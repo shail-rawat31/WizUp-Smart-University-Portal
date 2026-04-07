@@ -1,0 +1,190 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Inter:wght@400;500;600;700&display=swap');
+
+/* ------------------------------------------
+ * WIZUP PREMIUM UI UPGRADE 
+ * Modernizing all dashboards dynamically
+ * ------------------------------------------ */
+
+/* Dynamic Background Glows for a "Live" Feel */
+body::before {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: -10%;
+    width: 60vw;
+    height: 60vh;
+    background: radial-gradient(circle, rgba(255, 51, 102, 0.12), transparent 70%);
+    z-index: -1;
+    filter: blur(120px);
+    animation: drift 15s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    bottom: -20%;
+    right: -10%;
+    width: 50vw;
+    height: 50vh;
+    background: radial-gradient(circle, rgba(0, 210, 255, 0.12), transparent 70%);
+    z-index: -1;
+    filter: blur(100px);
+    animation: drift 20s ease-in-out infinite alternate-reverse;
+    pointer-events: none;
+}
+
+@keyframes drift {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(10%, 15%); }
+}
+
+/* Typography Consistency */
+h1, h2, h3, h4, .wb-text h2, .sidebar-header, .q-title, .card-hd {
+    font-family: 'Outfit', sans-serif !important;
+    letter-spacing: 0.5px;
+}
+
+/* Base Transitions */
+* {
+    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* =========================================
+   GLASSMORPHISM & CARDS ENGINE
+   ========================================= */
+.card, .q-card, .qa-card, .wb-stat, .welcome-banner, .signin-card, .module-card {
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    background: rgba(18, 18, 22, 0.55) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.card:hover, .q-card:hover, .qa-card:hover, .module-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 20px 48px rgba(0, 210, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+    background: rgba(28, 28, 35, 0.65) !important;
+}
+
+/* Shimmer Micro-Animation on Cards */
+.card::after, .q-card::after, .qa-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    transform: skewX(-20deg);
+    transition: 0s;
+    pointer-events: none;
+}
+
+.card:hover::after, .q-card:hover::after, .qa-card:hover::after {
+    left: 150%;
+    transition: 0.8s ease-in-out;
+}
+
+/* =========================================
+   SIDEBAR & HEADER
+   ========================================= */
+.sidebar {
+    background: rgba(10, 10, 12, 0.8) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(30px) saturate(150%) !important;
+    box-shadow: 8px 0 40px rgba(0, 0, 0, 0.6) !important;
+}
+
+.sidebar-menu a, .nav-item {
+    transition: all 0.3s ease !important;
+    border-radius: 8px;
+    margin: 4px 12px;
+}
+
+.sidebar-menu a:hover, .nav-item:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: translateX(8px);
+    color: #fff !important;
+    border-left-color: rgba(0, 210, 255, 0.8) !important;
+}
+
+.header {
+    background: rgba(5, 5, 8, 0.5) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* =========================================
+   BUTTONS & INPUTS
+   ========================================= */
+button, .post-btn, .submit-att-btn, .signin-btn, .action-btn {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
+    color: #fff !important;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 800;
+}
+
+button::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 210, 255, 0.5), rgba(255, 51, 102, 0.5));
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+button:hover::before {
+    opacity: 1;
+}
+
+button:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 30px rgba(0, 210, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Premium Form Elements */
+input, select, textarea {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #fff !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: #00d2ff !important;
+    box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.25) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* =========================================
+   SCROLLBAR BEAUTIFICATION
+   ========================================= */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}

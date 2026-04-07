@@ -1,0 +1,106 @@
+student sign in
+
+Done. Here's the full summary:
+
+📄 File: sql/seed_users.sql
+Run this in Supabase SQL Editor after the production schema is applied.
+
+🔑 Login Credentials
+Role	Email	Password
+Admin	admin@wizup.edu	Admin@1234
+HOD	hod.cs@wizup.edu	Hod@12345
+Faculty 1	rahul.singh@wizup.edu	Faculty@123
+Faculty 2	jasleen.kaur@wizup.edu	Faculty@123
+Faculty 3	anup.singh@wizup.edu	Faculty@123
+Faculty 4	jasmeet.kaur@wizup.edu	Faculty@123
+Faculty 5	shivani.chadha@wizup.edu	Faculty@123
+Faculty 6	ambika.sharma@wizup.edu	Faculty@123
+Faculty 7	gurjit.parmar@wizup.edu	Faculty@123
+Students	student01@wizup.edu … student40@wizup.edu	Student@123
+sb_publishable_5OM5uVs1nyiM9OXJjoeoVA_q8dniK8p
+
+1. Super Admin Dashboard (System Overview)
+Total users (students, faculty, HOD)
+Active sessions / logins
+Attendance overview (system-wide)
+👥 2. User Management (FULL CONTROL)
+Create users (student, faculty, HOD, admin)
+Edit user details
+Delete users
+Assign/change roles
+Activate/deactivate accounts
+Search, filter, bulk operations
+🎓 3. Student Management
+Add/edit/delete students
+Assign course (e.g., MCA AI/ML)
+Manage enrollment
+View full academic records
+👨‍🏫 4. Faculty Management
+Add/edit/delete faculty
+Assign subjects and classes
+Track workload and performance
+🧑‍💼 5. HOD Management
+Assign HOD to departments
+Transfer/change HOD roles
+Monitor departmental heads
+📚 6. Course, Subject & Curriculum Management
+Create courses (MCA, BCA, etc.)
+Add specializations (AI/ML, etc.)
+Create/edit subjects
+Assign subjects to faculty
+Manage academic structure
+🗓️ 7. Timetable Management
+Create/edit/delete timetables
+Assign faculty + rooms
+Resolve scheduling conflicts
+📊 8. Attendance System Control
+View all attendance records
+Edit/override attendance
+Generate reports (class-wise, dept-wise)
+📝 9. Marks & Evaluation Control
+View all student marks
+Edit/update marks (override)
+Monitor grading patterns
+Generate academic reports
+📨 10. Leave Management (Global Control)
+View all leave requests
+Override approvals
+Apply system rules
+Track leave analytics
+📢 11. Announcement System (Global)
+Post announcements to:
+All users
+Specific roles (students/faculty)
+Edit/delete announcements
+
+📊 13. Reports & Analytics (VERY IMPORTANT)
+User growth analytics
+Attendance trends
+Academic performance
+Revenue reports
+Export data (CSV/Excel/PDF)
+🔐 14. Role-Based Access Control (RBAC)
+Define permissions for each role
+Prevent unauthorized access
+Admin override capabilities
+⚙️ 15. System Settings & Configuration
+Manage system parameters
+Configure academic rules
+Manage themes (light/dark)
+Notification settings
+
+🗂️ 17. Data Management
+Backup database
+Restore data
+Import/export data
+Audit logs (who did what)
+🧾 18. Logs & Monitoring
+Track user activity
+Error logs
+Security logs
+API usage monitoring
+🔒 19. Security Management
+Prevent unauthorized access
+Manage sessions
+Reset passwords
+Detect suspicious activity
