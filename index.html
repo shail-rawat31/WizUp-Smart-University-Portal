@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WizUP University Portal</title>
+    <meta name="description" content="Welcome to WizUP - The Next-Gen University Management Portal" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: rgba(20, 20, 22, 0.65);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #8892b0;
+
+            /* Role Colors */
+            --c-student: #ff3366;
+            --c-faculty: #00e676;
+            --c-hod: #00d2ff;
+            --c-admin: #ff9100;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            background-image: url("assets/images/bg1.jpg");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* Dynamic Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at 15% 50%, rgba(5, 5, 10, 0.55), rgba(0, 0, 0, 0.65) 100%);
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 20s infinite ease-in-out alternate;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 51, 102, 0.15);
+            top: -10%;
+            left: -10%;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: rgba(0, 210, 255, 0.12);
+            bottom: -20%;
+            right: -10%;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: rgba(0, 230, 118, 0.1);
+            top: 40%;
+            left: 50%;
+            transform: translateX(-50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(30px, 50px) scale(1.1);
+            }
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 60px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-decoration: none;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .brand-logo img {
+            width: 75%;
+            object-fit: contain;
+        }
+
+        .brand-text h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #fff, #a0aab2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .nav-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            margin-left: 32px;
+            opacity: 0.8;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 1;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Hero Section */
+        .hero {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+            margin-top: -40px;
+        }
+
+        .hero-badge {
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #00d2ff;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+        }
+
+        .hero h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 64px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .hero h2 span {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: var(--text-muted);
+            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: 60px;
+        }
+
+        /* Cards Grid */
+        .portal-grid {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .portal-card {
+            width: 250px;
+            height: 320px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 30px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+            opacity: 0;
+            transition: 0.4s;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .portal-card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 2;
+            transition: 0.4s;
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-action {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 2;
+            opacity: 0.7;
+            transition: 0.3s;
+        }
+
+        .portal-card:hover .card-action {
+            opacity: 1;
+            gap: 12px;
+        }
+
+        /* Theming for each card */
+        .c-student .card-icon {
+            background: rgba(255, 51, 102, 0.1);
+            color: var(--c-student);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.2);
+        }
+
+        .c-student:hover {
+            box-shadow: 0 20px 50px rgba(255, 51, 102, 0.15);
+            border-color: rgba(255, 51, 102, 0.4);
+        }
+
+        .c-student .card-action {
+            color: var(--c-student);
+        }
+
+        .c-student:hover .card-icon {
+            background: var(--c-student);
+            color: #fff;
+            box-shadow: 0 0 30px rgba(255, 51, 102, 0.5);
+            transform: scale(1.1);
+        }
+
+        .c-faculty .card-icon {
+            background: rgba(0, 230, 118, 0.1);
+            color: var(--c-faculty);
+            border: 1px solid rgba(0, 230, 118, 0.3);
+            box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
+        }
+
+        .c-faculty:hover {
+            box-shadow: 0 20px 50px rgba(0, 230, 118, 0.15);
+            border-color: rgba(0, 230, 118, 0.4);
+        }
+
+        .c-faculty .card-action {
+            color: var(--c-faculty);
+        }
+
+        .c-faculty:hover .card-icon {
+            background: var(--c-faculty);
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 230, 118, 0.5);
+            transform: scale(1.1);
+        }
+
+        .c-hod .card-icon {
+            background: rgba(0, 210, 255, 0.1);
+            color: var(--c-hod);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+        }
+
+        .c-hod:hover {
+            box-shadow: 0 20px 50px rgba(0, 210, 255, 0.15);
+            border-color: rgba(0, 210, 255, 0.4);
+        }
+
+        .c-hod .card-action {
+            color: var(--c-hod);
+        }
+
+        .c-hod:hover .card-icon {
+            background: var(--c-hod);
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.5);
+            transform: scale(1.1);
+        }
+
+        .c-admin .card-icon {
+            background: rgba(255, 145, 0, 0.1);
+            color: var(--c-admin);
+            border: 1px solid rgba(255, 145, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 145, 0, 0.2);
+        }
+
+        .c-admin:hover {
+            box-shadow: 0 20px 50px rgba(255, 145, 0, 0.15);
+            border-color: rgba(255, 145, 0, 0.4);
+        }
+
+        .c-admin .card-action {
+            color: var(--c-admin);
+        }
+
+        .c-admin:hover .card-icon {
+            background: var(--c-admin);
+            color: #000;
+            box-shadow: 0 0 30px rgba(255, 145, 0, 0.5);
+            transform: scale(1.1);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 13px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--card-border);
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 10;
+        }
+
+        @media(max-width: 900px) {
+            .hero h2 {
+                font-size: 48px;
+            }
+
+            .portal-card {
+                width: calc(50% - 12px);
+            }
+
+            .navbar {
+                padding: 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* Desktop/Hover styles for modal triggers */
+        .nav-links a {
+            cursor: pointer;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-box {
+            background: rgba(20, 20, 22, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            padding: 40px;
+            transform: translateY(30px) scale(0.95);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 51, 102, 0.8);
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff, #a0aab2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-body {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .modal-body p {
+            margin-bottom: 16px;
+        }
+
+        .modal-body ul {
+            margin-left: 20px;
+            margin-bottom: 16px;
+        }
+
+        .modal-body li {
+            margin-bottom: 8px;
+        }
+
+        .modal-body a {
+            color: #00d2ff;
+            text-decoration: none;
+        }
+
+        @media(max-width: 600px) {
+            .hero h2 {
+                font-size: 36px;
+            }
+
+            .portal-card {
+                width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Background animations -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Top Navigation -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <div class="brand-logo"><img src="assets/images/LOGO1.png" alt="WizUP Logo" /></div>
+            <div class="brand-text">
+                <h1>WizUP</h1>
+                <p>University Portal</p>
+            </div>
+        </a>
+        <div class="nav-links">
+            <a onclick="openModal('modal-about')">About</a>
+            <a onclick="openModal('modal-help')">Help Desk</a>
+            <a onclick="openModal('modal-announcements')">Announcements</a>
+        </div>
+    </nav>
+
+    <!-- Hero & Cards -->
+    <main class="hero">
+        <div class="hero-badge"><i class="fa-solid fa-sparkles"></i> Academic Year 2025–26</div>
+        <h2>Welcome to the Future of<br><span>University Management</span></h2>
+        <p>A unified, seamless, and intelligent digital campus experience. Select your role to securely access your
+            personalized dashboard.</p>
+
+        <div class="portal-grid">
+            <!-- Student -->
+            <a href="student/student-signin.html" class="portal-card c-student">
+                <div class="card-icon"><i class="fa-solid fa-user-graduate"></i></div>
+                <div class="card-title">Student Portal</div>
+                <div class="card-desc">Access attendance, internal marks, leave applications, timetable, and more.</div>
+                <div class="card-action">Sign In <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+
+            <!-- Faculty -->
+            <a href="faculty/faculty-signin.html" class="portal-card c-faculty">
+                <div class="card-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+                <div class="card-title">Faculty Portal</div>
+                <div class="card-desc">Mark attendance, grade assignments, manage your workload, and post announcements.
+                </div>
+                <div class="card-action">Sign In <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+
+            <!-- HOD -->
+            <a href="hod/hod-signin.html" class="portal-card c-hod">
+                <div class="card-icon"><i class="fa-solid fa-crown"></i></div>
+                <div class="card-title">HOD Portal</div>
+                <div class="card-desc">Review analytics, approve leaves, manage department faculty, and monitor
+                    detentions.</div>
+                <div class="card-action">Sign In <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+
+            <!-- Admin -->
+            <a href="admin/admin-signin.html" class="portal-card c-admin">
+                <div class="card-icon"><i class="fa-solid fa-user-shield"></i></div>
+                <div class="card-title">Admin Portal</div>
+                <div class="card-desc">System configurations, database controls, security logs, and role management.
+                </div>
+                <div class="card-action">Sign In <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2026 WizUP Technologies. Designed for excellence. • Strict Authentication Enforced.
+    </footer>
+
+    <!-- Modals -->
+    <div id="modal-about" class="modal-overlay" onclick="closeModalOnBg(event, 'modal-about')">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('modal-about')"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title">About WizUP</div>
+            <div class="modal-body">
+                <p><strong>WizUP</strong> is a cutting-edge next-generation University Management Portal designed to provide a unified, secure, and personalized digital campus experience.</p>
+                <p>Engineered for speed, security, and aesthetics, the portal effortlessly connects Students, Faculty, HODs, and Administrators under a single pane of glass.</p>
+                <p>Version: <strong>2.0 Genesis</strong><br/>Built with modern Web Technologies & Glassmorphic UI.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-help" class="modal-overlay" onclick="closeModalOnBg(event, 'modal-help')">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('modal-help')"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title">IT Help Desk</div>
+            <div class="modal-body">
+                <p>Experiencing difficulties accessing your portal? Our IT Support Team is available 24/7 to assist you.</p>
+                <ul>
+                    <li><strong>Email:</strong> support@wizup.edu</li>
+                    <li><strong>Phone:</strong> +1 (800) 123-HELP</li>
+                    <li><strong>Location:</strong> Tech Building, Room 402</li>
+                </ul>
+                <p>For password resets, please contact your respective system administrator.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-announcements" class="modal-overlay" onclick="closeModalOnBg(event, 'modal-announcements')">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('modal-announcements')"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title">Latest Announcements</div>
+            <div class="modal-body">
+                <p><i class="fa-solid fa-bell" style="color: #ff9100; margin-right:6px;"></i> <strong>Final Exams Schedule Released</strong> - Please check your student portal for your personalized timetable.</p>
+                <p><i class="fa-solid fa-bell" style="color: #ff9100; margin-right:6px;"></i> <strong>System Maintenance</strong> - The portal will be briefly down for updates on Sunday at 2:00 AM AST.</p>
+                <p><i class="fa-solid fa-bell" style="color: #ff9100; margin-right:6px;"></i> <strong>Faculty Workshop</strong> - Mandatory AI integration seminar on the 28th.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://vqxhbfbpqwpdbmgtdcik.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxeGhiZmJwcXdwZGJtZ3RkY2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTY1MTMsImV4cCI6MjA4NzM5MjUxM30.U9wuwWRDsUqKef93fl0C1DLu9l_hQ5zKMT9KhOt24xE";
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Auto-redirect if already logged in
+        db.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                db.from('profiles').select('role').eq('id', session.user.id).single()
+                    .then(({ data }) => {
+                        if (data) {
+                            if (data.role === 'student') window.location.href = 'student/student-dashboard.html';
+                            else if (data.role === 'faculty') window.location.href = 'faculty/faculty-dashboard.html';
+                            else if (data.role === 'hod') window.location.href = 'hod/hod-dashboard.html';
+                            else if (data.role === 'admin') window.location.href = 'admin/admin-dashboard.html';
+                        }
+                    });
+            }
+        });
+
+        // Modal Logic
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function closeModalOnBg(event, id) {
+            if (event.target === document.getElementById(id)) {
+                closeModal(id);
+            }
+        }
+    </script>
+</body>
+
+</html>
