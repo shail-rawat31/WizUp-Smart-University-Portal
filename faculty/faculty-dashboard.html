@@ -1,1135 +1,314 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Faculty Dashboard – WizUP</title>
-    <meta name="description" content="Faculty portal for attendance, marks, timetable and announcements" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --primary: #e5383b;
-            --bg: #0a0a0f;
-            --glass: rgba(20, 20, 30, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            min-height: 100vh;
-            font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a0f 100%) center/cover no-repeat fixed;
-            color: #fff;
-            display: none;
-        }
-
-        body {
-            min-height: 100vh;
-            font-family: "Inter", system-ui, sans-serif;
-            background: url("../assets/images/bg1.jpg") center/cover no-repeat fixed;
-            color: #fff;
-            display: none;
-        }
-
-        /* Header */
-        /* Global Header - Student Dashboard Match */
-        :root {
-            --glass-blur: blur(24px);
-        }
-
-        .header {
-            height: 70px;
-            padding: 0 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(229, 56, 59, 0.18);
-            background: rgba(8, 4, 6, 0.75);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .logo {
-            width: 44px;
-            height: auto;
-            filter: drop-shadow(0 0 8px rgba(229, 56, 59, 0.3));
-        }
-
-        .h-search {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            padding: 9px 20px;
-            border-radius: 99px;
-            width: 400px;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .h-search:focus-within {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(229, 56, 59, 0.5);
-            box-shadow: 0 0 20px rgba(229, 56, 59, 0.15);
-            width: 440px;
-        }
-
-        .h-search input {
-            background: transparent;
-            border: none;
-            outline: none;
-            color: #fff;
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            width: 100%;
-        }
-
-        .h-search input::placeholder {
-            color: rgba(255, 255, 255, 0.35);
-        }
-
-        .h-search i {
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 14px;
-        }
-
-        .h-actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .h-btn {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: rgba(255, 255, 255, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.2s ease;
-            text-decoration: none;
-        }
-
-        .h-btn:hover {
-            background: rgba(229, 56, 59, 0.15);
-            border-color: rgba(229, 56, 59, 0.4);
-            color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(229, 56, 59, 0.2);
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 6px 18px 6px 7px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 99px;
-            border: 1px solid rgba(229, 56, 59, 0.25);
-            cursor: pointer;
-            transition: 0.3s;
-            text-decoration: none;
-        }
-
-        .user-profile:hover {
-            background: rgba(229, 56, 59, 0.1);
-            border-color: rgba(229, 56, 59, 0.5);
-        }
-
-        .up-avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), #ff6b6b);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 800;
-            font-size: 14px;
-            color: #fff;
-            box-shadow: 0 0 15px rgba(229, 56, 59, 0.4);
-        }
-
-        .up-info {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.2;
-        }
-
-        .up-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .up-role {
-            font-size: 10px;
-            color: #fca5a5;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-
-        /* Sidebar & Sidebar components following header CSS block */
-
-        /* Layout */
-        .main-container {
-            display: flex;
-            min-height: calc(100vh - 70px);
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 225px;
-            background: rgba(15, 20, 15, .97);
-            flex-shrink: 0;
-            padding: 12px 0;
-            border-right: 1px solid rgba(89, 130, 97, .2)
-        }
-
-        .sidebar-section {
-            margin-bottom: 2px
-        }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 16px;
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .8px;
-            cursor: pointer;
-            color: #ccc;
-            background: rgba(255, 255, 255, .04);
-            border-left: 3px solid transparent;
-            transition: .15s
-        }
-
-        .sidebar-header:hover {
-            background: rgba(255, 255, 255, .08)
-        }
-
-        .sidebar-section.open .sidebar-header {
-            border-left-color: #598261
-        }
-
-        .sidebar-header .ch {
-            font-size: 10px;
-            transition: transform .2s
-        }
-
-        .sidebar-section.open .sidebar-header .ch {
-            transform: rotate(180deg)
-        }
-
-        .sidebar-menu {
-            display: none;
-            padding: 4px 0
-        }
-
-        .sidebar-section.open .sidebar-menu {
-            display: block
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px 8px 22px;
-            color: #b0b0b0;
-            text-decoration: none;
-            font-size: 12px;
-            transition: .15s
-        }
-
-        .sidebar-menu a::before {
-            content: "›";
-            color: #598261;
-            font-size: 14px;
-            font-weight: 800
-        }
-
-        .sidebar-menu a:hover {
-            background: rgba(89, 130, 97, .12);
-            color: #fff
-        }
-
-        /* Content */
-        .content {
-            flex: 1;
-            padding: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            min-width: 0
-        }
-
-        /* Welcome banner */
-        .welcome-banner {
-            background: linear-gradient(135deg, rgba(58, 90, 64, .8), rgba(30, 50, 35, .9));
-            border: 1px solid rgba(89, 130, 97, .35);
-            border-radius: 14px;
-            padding: 18px 22px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            backdrop-filter: blur(8px)
-        }
-
-        .wb-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: rgba(89, 130, 97, .3);
-            border: 2px solid #598261;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            flex-shrink: 0
-        }
-
-        .wb-text h2 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: .5px
-        }
-
-        .wb-text p {
-            margin: 5px 0 0;
-            font-size: 12px;
-            color: rgba(226, 232, 240, .75)
-        }
-
-        .wb-stats {
-            margin-left: auto;
-            display: flex;
-            gap: 16px
-        }
-
-        .wb-stat {
-            text-align: center;
-            padding: 10px 18px;
-            background: rgba(255, 255, 255, .07);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, .1)
-        }
-
-        .wb-stat .sv {
-            font-size: 24px;
-            font-weight: 800;
-            color: #86efac
-        }
-
-        .wb-stat .sl {
-            font-size: 10px;
-            color: rgba(148, 163, 184, .8);
-            text-transform: uppercase;
-            margin-top: 2px
-        }
-
-        /* Quick action cards - Premium Glass Grid */
-        .quick-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px
-        }
-
-        .q-card {
-            background: rgba(20, 20, 30, 0.65);
-            backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            padding: 24px;
-            cursor: pointer;
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        .q-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--primary);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-            background: rgba(229, 56, 59, 0.05);
-        }
-
-        .q-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.04);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            transition: 0.3s;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .q-card:hover .q-icon {
-            transform: scale(1.1) rotate(6deg);
-            background: var(--primary);
-            color: #fff;
-            box-shadow: 0 0 20px rgba(229, 56, 59, 0.5);
-        }
-
-        .q-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 19px;
-            font-weight: 800;
-            color: #fff;
-            letter-spacing: 0.5px;
-        }
-
-        .q-sub {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.6);
-            line-height: 1.5;
-            font-weight: 400;
-        }
-
-        /* Logic for hover-active halos */
-        .q-blue .q-icon { color: #60a5fa; }
-        .q-blue:hover { border-color: #60a5fa; }
-        .q-blue:hover .q-icon { background: #60a5fa; box-shadow: 0 0 20px rgba(96, 165, 250, 0.5); }
-        
-        .q-gold .q-icon { color: #facc15; }
-        .q-gold:hover { border-color: #facc15; }
-        .q-gold:hover .q-icon { background: #facc15; box-shadow: 0 0 20px rgba(250, 204, 21, 0.5); }
-
-        .q-purple .q-icon { color: #c084fc; }
-        .q-purple:hover { border-color: #c084fc; }
-        .q-purple:hover .q-icon { background: #c084fc; box-shadow: 0 0 20px rgba(192, 132, 252, 0.5); }
-
-        .q-red .q-icon { color: #f87171; }
-        .q-red:hover { border-color: #f87171; }
-        .q-red:hover .q-icon { background: #f87171; box-shadow: 0 0 20px rgba(248, 113, 113, 0.5); }
-
-        .q-teal .q-icon { color: #2dd4bf; }
-        .q-teal:hover { border-color: #2dd4bf; }
-        .q-teal:hover .q-icon { background: #2dd4bf; box-shadow: 0 0 20px rgba(45, 212, 191, 0.5); }
-
-        .q-green .q-icon { color: #4ade80; }
-        .q-green:hover { border-color: #4ade80; }
-        .q-green:hover .q-icon { background: #4ade80; box-shadow: 0 0 20px rgba(74, 222, 128, 0.5); }
-
-        /* Main grid */
-        .main-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px
-        }
-
-        .card {
-            background: rgba(255, 255, 255, .96);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, .1)
-        }
-
-        .card-dark {
-            background: rgba(15, 25, 15, .8);
-            border: 1px solid rgba(89, 130, 97, .25);
-            backdrop-filter: blur(8px)
-        }
-
-        .card-hd {
-            padding: 11px 16px;
-            font-size: 12px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            display: flex;
-            align-items: center;
-            gap: 8px
-        }
-
-        .card-hd i {
-            color: #ffc559
-        }
-
-        .card.card-dark .card-hd {
-            background: rgba(2, 8, 2, .3);
-            border-bottom: 1px solid rgba(89, 130, 97, .2);
-            color: #e2e8f0
-        }
-
-        .card:not(.card-dark) .card-hd {
-            background: #333;
-            color: #fff
-        }
-
-        .card-bd {
-            padding: 14px
-        }
-
-        /* Timetable */
-        .tt-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px
-        }
-
-        .tt-table th {
-            background: #f0f0f0;
-            padding: 8px 12px;
-            text-align: left;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 10px;
-            border-bottom: 2px solid #ddd
-        }
-
-        .tt-table td {
-            padding: 8px 12px;
-            border-bottom: 1px solid #eee;
-            color: #333
-        }
-
-        .tt-table tr:hover td {
-            background: #fafafa
-        }
-
-        .subject-pill {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 99px;
-            font-size: 11px;
-            font-weight: 700;
-            background: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #c8e6c9
-        }
-
-        /* Attendance form */
-        .att-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            font-size: 13px;
-            color: #333
-        }
-
-        .att-form select,
-        .att-form input {
-            width: 100%;
-            padding: 9px 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 13px;
-            outline: none
-        }
-
-        .att-form select:focus,
-        .att-form input:focus {
-            border-color: #598261;
-            box-shadow: 0 0 0 3px rgba(89, 130, 97, .15)
-        }
-
-        .student-list {
-            margin-top: 8px;
-            max-height: 240px;
-            overflow-y: auto;
-            border: 1px solid #eee;
-            border-radius: 8px
-        }
-
-        .student-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 9px 14px;
-            border-bottom: 1px solid #f5f5f5;
-            font-size: 12px
-        }
-
-        .student-row:last-child {
-            border-bottom: none
-        }
-
-        .att-toggle {
-            display: flex;
-            gap: 6px
-        }
-
-        .att-btn {
-            padding: 5px 12px;
-            border-radius: 99px;
-            border: none;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: .15s
-        }
-
-        .att-btn.present {
-            background: #e8f5e9;
-            color: #2e7d32
-        }
-
-        .att-btn.absent {
-            background: #ffebee;
-            color: #c62828
-        }
-
-        .att-btn.active.present {
-            background: #2e7d32;
-            color: #fff
-        }
-
-        .att-btn.active.absent {
-            background: #c62828;
-            color: #fff
-        }
-
-        .submit-att-btn {
-            padding: 10px;
-            width: 100%;
-            border: none;
-            border-radius: 8px;
-            background: #3A5A40;
-            color: #fff;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: background .2s
-        }
-
-        .submit-att-btn:hover {
-            background: #2d4a32
-        }
-
-        /* Announcements form */
-        .ann-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px
-        }
-
-        .ann-form input,
-        .ann-form textarea {
-            width: 100%;
-            padding: 9px 12px;
-            border: 1px solid rgba(89, 130, 97, .35);
-            border-radius: 8px;
-            font-size: 13px;
-            background: rgba(255, 255, 255, .06);
-            color: #e2e8f0;
-            outline: none;
-            font-family: inherit
-        }
-
-        .ann-form textarea {
-            min-height: 80px;
-            resize: vertical
-        }
-
-        .ann-form input:focus,
-        .ann-form textarea:focus {
-            border-color: #598261;
-            box-shadow: 0 0 0 3px rgba(89, 130, 97, .2)
-        }
-
-        .post-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(90deg, #3A5A40, #598261);
-            color: #fff;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: .2s
-        }
-
-        .post-btn:hover {
-            opacity: .88
-        }
-
-        /* Announcement items */
-        .ann-item {
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(89, 130, 97, .15)
-        }
-
-        .ann-item:last-child {
-            border-bottom: none
-        }
-
-        .ann-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #e2e8f0;
-            margin-bottom: 4px
-        }
-
-        .ann-body {
-            font-size: 12px;
-            color: rgba(148, 163, 184, .85)
-        }
-
-        .ann-meta {
-            font-size: 10px;
-            color: rgba(148, 163, 184, .6);
-            margin-top: 4px
-        }
-
-        @media(max-width:1100px) {
-            .quick-grid {
-                grid-template-columns: repeat(3, 1fr)
-            }
-
-            .main-grid {
-                grid-template-columns: 1fr
-            }
-
-            .wb-stats {
-                display: none
-            }
-        }
-
-        @media(max-width:900px) {
-            .sidebar {
-                display: none
-            }
-
-            .quick-grid {
-                grid-template-columns: repeat(2, 1fr)
-            }
-        }
-    </style>
-    <link rel="stylesheet" href="../assets/css/premium-dashboard.css" />
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Faculty Hub – WizUP</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="faculty-shared.css"/>
+<style>
+/* Announcement items */
+.ann-item{padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;margin-bottom:8px;position:relative;transition:.2s}
+.ann-item:hover{background:rgba(229,56,59,.05)}
+.ann-title{font-size:13px;font-weight:700;color:#fca5a5;margin-bottom:4px}
+.ann-body{font-size:12px;color:rgba(255,255,255,.6);line-height:1.5}
+.ann-meta{font-size:10px;color:rgba(255,255,255,.3);margin-top:5px}
+/* Today's TT */
+.tt-table{width:100%;border-collapse:collapse;font-size:12px}
+.tt-table th{background:rgba(0,0,0,.3);padding:9px 14px;text-align:left;font-weight:700;text-transform:uppercase;font-size:10px;color:#8892b0;border-bottom:1px solid rgba(255,255,255,.07)}
+.tt-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;color:#e2e8f0}
+.tt-table tr:hover td{background:rgba(229,56,59,.04)}
+.subject-pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;background:rgba(229,56,59,.15);color:#fca5a5;border:1px solid rgba(229,56,59,.3)}
+/* Task cards */
+.task-card{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-radius:12px;margin-bottom:10px;text-decoration:none;transition:.2s;border:1px solid transparent}
+.task-card:hover{transform:translateX(4px)}
+.task-pending{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.25)}
+.task-label{font-size:13px;font-weight:700;color:#fff}
+.task-count{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px}
+/* Notif box */
+.notif-msg{padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;margin-bottom:8px}
+.notif-msg .nt{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:3px}
+.notif-msg .nb{font-size:11px;color:rgba(255,255,255,.55);line-height:1.5}
+.notif-msg .nm{font-size:9px;color:rgba(255,255,255,.3);margin-top:4px}
+</style>
 </head>
-
 <body>
-    <header class="header">
-        <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo" />
-        <div class="h-search">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Search students, analytics, records..." />
-        </div>
-        <div class="h-actions">
-            <!-- Clock from Student Dashboard style but keeping functionality -->
-            <div style="font-family:'Outfit'; font-weight:800; font-size:18px; color:var(--primary); margin-right:10px; filter:drop-shadow(0 0 5px rgba(229,56,59,0.3));" id="clock">00:00</div>
-            
-            <a href="faculty-timetable.html" class="h-btn" title="Timetable"><i class="fa-solid fa-calendar-week"></i></a>
-            <a href="faculty-notifications.html" class="h-btn" title="Notifications"><i class="fa-solid fa-bell"></i></a>
-            
-            <div class="user-profile">
-                <!-- Avatar with initial logic -->
-                <div class="up-avatar" id="uInitial">F</div>
-                <div class="up-info">
-                    <span class="up-name" id="uName">Faculty</span>
-                    <span class="up-role">Faculty Hub</span>
-                </div>
-            </div>
+<!-- HEADER — exact student match -->
+<header class="header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo"/>
+  <div class="h-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Search students, analytics, records…"/></div>
+  <div class="h-actions">
+    <div id="clock" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;color:#e5383b;filter:drop-shadow(0 0 5px rgba(229,56,59,.35));margin-right:6px">00:00</div>
+    <a href="faculty-timetable.html" class="h-btn" title="Timetable"><i class="fa-solid fa-calendar-week"></i></a>
+    <a href="faculty-notifications.html" class="h-btn" title="Notifications" id="notifBtn"><i class="fa-solid fa-bell"></i></a>
+    <div class="user-profile">
+      <div class="up-avatar" id="uAvatar">F</div>
+      <div class="up-info"><span class="up-name" id="uName">Faculty</span><span class="up-role">Faculty Hub</span></div>
+    </div>
+    <button class="h-btn" onclick="doSignOut()" title="Sign Out"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
 
-            <button class="h-btn" onclick="doSignOut()" title="Sign Out"><i class="fa-solid fa-right-from-bracket"></i></button>
-        </div>
-    </header>
+<div class="main-container">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section open">
+      <div class="sidebar-header">ATTENDANCE<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu">
+        <a href="faculty-attendance.html">Mark Attendance</a>
+      </div>
+    </div>
+    <div class="sidebar-section open">
+      <div class="sidebar-header">ACADEMICS<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu">
+        <a href="faculty-timetable.html">My Timetable</a>
+        <a href="faculty-marks.html">Internal Marks</a>
+        <a href="faculty-assignments.html">Assignments & Grading</a>
+        <a href="faculty-subjects.html">Course Materials</a>
+      </div>
+    </div>
+    <div class="sidebar-section open">
+      <div class="sidebar-header">STUDENTS<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu">
+        <a href="faculty-students.html">Student Monitoring</a>
+        <a href="faculty-leave-approvals.html">Leave Approvals</a>
+      </div>
+    </div>
+    <div class="sidebar-section open">
+      <div class="sidebar-header">INSIGHTS<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu">
+        <a href="faculty-analytics.html">Analytics</a>
+        <a href="faculty-srms.html">SRMS Requests</a>
+      </div>
+    </div>
+    <div class="sidebar-section open">
+      <div class="sidebar-header">PERSONAL<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu">
+        <a href="faculty-profile.html">My Profile</a>
+        <a href="faculty-leave.html">Apply Leave</a>
+        <a href="faculty-notifications.html">Notifications</a>
+        <a href="faculty-docs.html">Document Verify</a>
+      </div>
+    </div>
+  </aside>
 
-    <div class="main-container">
-        <aside class="sidebar">
-            <div class="sidebar-section open">
-                <div class="sidebar-header">ATTENDANCE<i class="fa-solid fa-chevron-down ch"></i></div>
-                <div class="sidebar-menu">
-                    <a href="faculty-attendance.html">Attendance Hub</a>
-                </div>
-            </div>
-            <div class="sidebar-section open">
-                <div class="sidebar-header">ACADEMICS<i class="fa-solid fa-chevron-down ch"></i></div>
-                <div class="sidebar-menu">
-                    <a href="faculty-timetable.html">My Timetable</a>
-                    <a href="faculty-assignments.html">Assignments & Grading</a>
-                    <a href="faculty-subjects.html">Course Materials</a>
-                    <a href="faculty-marks.html">Internal Marks</a>
-                </div>
-            </div>
-            <div class="sidebar-section open">
-                <div class="sidebar-header">STUDENTS<i class="fa-solid fa-chevron-down ch"></i></div>
-                <div class="sidebar-menu">
-                    <a href="faculty-students.html">Student Monitoring</a>
-                </div>
-            </div>
-            <div class="sidebar-section open">
-                <div class="sidebar-header">INSIGHTS<i class="fa-solid fa-chevron-down ch"></i></div>
-                <div class="sidebar-menu">
-                    <a href="faculty-analytics.html">Analytics</a>
-                </div>
-            </div>
-            <div class="sidebar-section open">
-                <div class="sidebar-header">PERSONAL<i class="fa-solid fa-chevron-down ch"></i></div>
-                <div class="sidebar-menu">
-                    <a href="faculty-profile.html">My Profile</a>
-                    <a href="faculty-leave.html">Apply Leave</a>
-                    <a href="faculty-notifications.html">Notifications</a>
-                </div>
-            </div>
-            <div class="sidebar-section">
-                <div class="sidebar-header">OTHER<i class="fa-solid fa-chevron-down ch"></i></div>
-                <div class="sidebar-menu">
-                    <a href="javascript:doSignOut()">Sign Out</a>
-                </div>
-            </div>
-        </aside>
-
-        <main class="content">
-            <!-- Welcome banner -->
-            <div class="welcome-banner">
-                <div class="wb-icon"><i class="fa-solid fa-user-tie"></i></div>
-                <div class="wb-text">
-                    <h2 id="welcomeName">Welcome, Faculty</h2>
-                    <p>Employee Code: <span id="empCode">—</span> &nbsp;|&nbsp; Department: <span id="deptName">—</span>
-                    </p>
-                </div>
-                <div class="wb-stats">
-                    <div class="wb-stat">
-                        <div class="sv" id="stat-students">0</div>
-                        <div class="sl">Students</div>
-                    </div>
-                    <div class="wb-stat">
-                        <div class="sv" id="stat-today">0</div>
-                        <div class="sl">Today's Classes</div>
-                    </div>
-                    <div class="wb-stat">
-                        <div class="sv" id="stat-ann" style="color:#ffc559;">0</div>
-                        <div class="sl">Announcements</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="quick-grid">
-                <a href="faculty-attendance.html" class="q-card q-green">
-                    <div class="q-icon"><i class="fa-solid fa-calendar-check"></i></div>
-                    <div class="q-title">Attendance Hub</div>
-                    <div class="q-sub">Mark & verify student logs</div>
-                </a>
-                <a href="faculty-marks.html" class="q-card q-gold">
-                    <div class="q-icon"><i class="fa-solid fa-file-signature"></i></div>
-                    <div class="q-title">Academic Grading</div>
-                    <div class="q-sub">MST & evaluation updates</div>
-                </a>
-                <a href="faculty-students.html" class="q-card q-purple">
-                    <div class="q-icon"><i class="fa-solid fa-user-graduate"></i></div>
-                    <div class="q-title">Student Insights</div>
-                    <div class="q-sub">Performance & Individual monitoring</div>
-                </a>
-                <a href="faculty-assignments.html" class="q-card q-teal">
-                    <div class="q-icon"><i class="fa-solid fa-book-open-reader"></i></div>
-                    <div class="q-title">Assesments</div>
-                    <div class="q-sub">Evaluate submissions</div>
-                </a>
-                <a href="faculty-analytics.html" class="q-card q-blue">
-                    <div class="q-icon"><i class="fa-solid fa-chart-line-up"></i></div>
-                    <div class="q-title">Deep Analytics</div>
-                    <div class="q-sub">Trends & predictive metrics</div>
-                </a>
-                <a href="#postAnn" class="q-card q-red" onclick="document.getElementById('annTitle').focus()">
-                    <div class="q-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
-                    <div class="q-title">Circular Post</div>
-                    <div class="q-sub">Broadcast to student notices</div>
-                </a>
-            </div>
-
-            <!-- Main content grid -->
-            <div class="main-grid">
-                <!-- Today's Timetable -->
-                <div class="card">
-                    <div class="card-hd"><i class="fa-solid fa-clock"></i> Today's Classes – <span
-                            id="todayDay">Monday</span></div>
-                    <div class="card-bd" style="height: 100%; overflow-y: auto;">
-                        <table class="tt-table">
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Subject</th>
-                                    <th>Room</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="todayTT">
-                                <tr>
-                                    <td colspan="4" style="text-align:center;color:#999;padding:20px">Loading…</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Pending Tasks -->
-                <div class="card">
-                    <div class="card-hd"><i class="fa-solid fa-list-check"></i> Pending Tasks</div>
-                    <div class="card-bd" style="display:flex;flex-direction:column;gap:12px;">
-                        <a href="faculty-attendance.html" style="text-decoration:none;display:flex;align-items:center;justify-content:space-between;padding:12px;background:#fff5f5;border:1px solid #fed7aa;border-radius:8px;color:#9a3412;">
-                            <div style="font-size:12px;font-weight:700;"><i class="fa-solid fa-clock-rotate-left"></i> Attendance Pending</div>
-                            <div style="font-size:11px;font-weight:600;background:#9a3412;color:#fff;padding:2px 8px;border-radius:99px;">2 Classes</div>
-                        </a>
-                        <a href="faculty-assignments.html" style="text-decoration:none;display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;color:#166534;">
-                            <div style="font-size:12px;font-weight:700;"><i class="fa-solid fa-book-open-reader"></i> Assignments to Review</div>
-                            <div style="font-size:11px;font-weight:600;background:#166534;color:#fff;padding:2px 8px;border-radius:99px;">12 Subs</div>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- University Announcements (Notification Box) -->
-                <div class="card">
-                    <div class="card-hd" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span><i class="fa-solid fa-bell" style="color:var(--primary);"></i> University Circulars</span>
-                        <a href="faculty-notifications.html" style="font-size:10px; color:var(--primary); text-decoration:none; font-weight:700; text-transform:uppercase; letter-spacing:1px;">See All →</a>
-                    </div>
-                    <div class="card-bd" style="padding: 15px;">
-                        <div id="globalNotifs" class="msg-list" style="display:flex; flex-direction:column; gap:12px;">
-                            <div style="text-align:center; padding:20px; color:rgba(255,255,255,0.3); font-size:12px;">
-                                <i class="fa-solid fa-circle-notch fa-spin"></i> Synchronizing Feed...
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Post Announcement -->
-                <div class="card card-dark" id="postAnn">
-                    <div class="card-hd"><i class="fa-solid fa-tower-broadcast"></i> Broadcaster</div>
-                    <div class="card-bd">
-                        <p style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:12px;">Post highly visible notices to the student portal.</p>
-                        <div class="ann-form">
-                            <input type="text" id="annTitle" placeholder="Catchy heading…" />
-                            <textarea id="annContent" placeholder="Describe the update…" style="min-height:50px;"></textarea>
-                            <button class="post-btn" onclick="postAnnouncement()"><i
-                                    class="fa-solid fa-paper-plane"></i> Launch Announcement</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+  <!-- CONTENT -->
+  <main class="content">
+    <!-- Welcome banner -->
+    <div class="welcome-banner">
+      <div class="wb-icon"><i class="fa-solid fa-user-tie"></i></div>
+      <div class="wb-text">
+        <h2 id="welcomeName">Welcome, Faculty</h2>
+        <p>Employee: <strong id="empCode">—</strong> &nbsp;·&nbsp; Dept: <strong id="deptName">—</strong></p>
+      </div>
+      <div class="wb-stats">
+        <div class="wb-stat"><div class="sv" id="statStudents">—</div><div class="sl">Students</div></div>
+        <div class="wb-stat"><div class="sv" id="statToday" style="color:#7dd3fc">—</div><div class="sl">Today's Classes</div></div>
+        <div class="wb-stat"><div class="sv" id="statSubjects" style="color:#fca5a5">—</div><div class="sl">Subjects</div></div>
+      </div>
     </div>
 
-    <script>
-        const SUPABASE_URL = "https://vqxhbfbpqwpdbmgtdcik.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxeGhiZmJwcXdwZGJtZ3RkY2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTY1MTMsImV4cCI6MjA4NzM5MjUxM30.U9wuwWRDsUqKef93fl0C1DLu9l_hQ5zKMT9KhOt24xE";
-        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <!-- Quick actions -->
+    <div class="quick-grid">
+      <a href="faculty-attendance.html" class="q-card q-green">
+        <div class="q-icon"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="q-title">Attendance Hub</div>
+        <div class="q-sub">Mark, verify & rectify student logs</div>
+      </a>
+      <a href="faculty-marks.html" class="q-card q-gold">
+        <div class="q-icon"><i class="fa-solid fa-star-half-stroke"></i></div>
+        <div class="q-title">Internal Marks</div>
+        <div class="q-sub">MST, assignment & evaluation upload</div>
+      </a>
+      <a href="faculty-students.html" class="q-card q-purple">
+        <div class="q-icon"><i class="fa-solid fa-user-graduate"></i></div>
+        <div class="q-title">Student Insights</div>
+        <div class="q-sub">Performance & individual monitoring</div>
+      </a>
+      <a href="faculty-assignments.html" class="q-card q-teal">
+        <div class="q-icon"><i class="fa-solid fa-book-open-reader"></i></div>
+        <div class="q-title">Assessments</div>
+        <div class="q-sub">Create & evaluate submissions</div>
+      </a>
+      <a href="faculty-analytics.html" class="q-card q-blue">
+        <div class="q-icon"><i class="fa-solid fa-chart-line-up"></i></div>
+        <div class="q-title">Deep Analytics</div>
+        <div class="q-sub">Trends, defaulters & class metrics</div>
+      </a>
+      <a href="#annSection" class="q-card q-red" onclick="document.getElementById('annTitle').focus()">
+        <div class="q-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
+        <div class="q-title">Post Circular</div>
+        <div class="q-sub">Broadcast to student notices</div>
+      </a>
+    </div>
 
-        let currentUser = null;
+    <!-- Bottom grid -->
+    <div class="grid2">
+      <!-- Today's timetable -->
+      <div class="card">
+        <div class="card-hd">
+          <h3><i class="fa-solid fa-clock" style="color:#fca5a5"></i> Today's Classes — <span id="todayDay"></span></h3>
+          <a href="faculty-timetable.html" style="font-size:11px;color:#fca5a5;text-decoration:none;font-weight:700">Full →</a>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tt-table"><thead><tr><th>Time</th><th>Subject</th><th>Room</th><th></th></tr></thead><tbody id="todayTT"><tr><td colspan="4" style="text-align:center;padding:24px;color:#8892b0">Loading…</td></tr></tbody></table>
+        </div>
+      </div>
 
-        function updateClock() {
-            const n = new Date();
-            document.getElementById("clock").textContent = n.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        }
-        setInterval(updateClock, 1000); updateClock();
+      <!-- Pending tasks -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-list-check" style="color:#fca5a5"></i> Pending Tasks</h3></div>
+        <div class="card-bd">
+          <a href="faculty-attendance.html" class="task-card task-pending">
+            <div><i class="fa-solid fa-clock-rotate-left" style="color:#fcd34d;margin-right:8px"></i><span class="task-label">Attendance Unmarked</span></div>
+            <span class="task-count" style="background:rgba(245,158,11,.2);color:#fcd34d">2 Classes</span>
+          </a>
+          <a href="faculty-assignments.html" class="task-card" style="background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.2)">
+            <div><i class="fa-solid fa-file-lines" style="color:#86efac;margin-right:8px"></i><span class="task-label">Assignments to Review</span></div>
+            <span class="task-count" style="background:rgba(34,197,94,.2);color:#86efac">12 Subs</span>
+          </a>
+          <a href="faculty-leave-approvals.html" class="task-card" style="background:rgba(56,189,248,.06);border-color:rgba(56,189,248,.2)">
+            <div><i class="fa-solid fa-calendar-xmark" style="color:#7dd3fc;margin-right:8px"></i><span class="task-label">Leave Approvals Pending</span></div>
+            <span class="task-count" id="leaveCount" style="background:rgba(56,189,248,.2);color:#7dd3fc">0</span>
+          </a>
+          <a href="faculty-marks.html" class="task-card" style="background:rgba(167,139,250,.06);border-color:rgba(167,139,250,.2)">
+            <div><i class="fa-solid fa-star" style="color:#c4b5fd;margin-right:8px"></i><span class="task-label">Marks Entry Pending</span></div>
+            <span class="task-count" style="background:rgba(167,139,250,.2);color:#c4b5fd">Upload</span>
+          </a>
+        </div>
+      </div>
 
-        document.querySelectorAll(".sidebar-header").forEach(h => {
-            h.addEventListener("click", () => h.parentElement.classList.toggle("open"));
-        });
+      <!-- University circulars -->
+      <div class="card">
+        <div class="card-hd">
+          <h3><i class="fa-solid fa-bell" style="color:#fca5a5"></i> University Circulars</h3>
+          <a href="faculty-notifications.html" style="font-size:11px;color:#fca5a5;text-decoration:none;font-weight:700">All →</a>
+        </div>
+        <div class="card-bd" id="globalNotifs">
+          <div style="text-align:center;padding:20px;color:rgba(255,255,255,.25);font-size:12px"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading…</div>
+        </div>
+      </div>
 
-        async function doSignOut() {
-            await db.auth.signOut();
-            window.location.href = "../index.html";
-        }
+      <!-- Post announcement -->
+      <div class="card" id="annSection">
+        <div class="card-hd"><h3><i class="fa-solid fa-tower-broadcast" style="color:#fca5a5"></i> Broadcaster</h3></div>
+        <div class="card-bd">
+          <p style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:14px">Post highly visible notices to the student portal.</p>
+          <div class="form-group"><label>Title</label><input type="text" id="annTitle" placeholder="Announcement heading…"/></div>
+          <div class="form-group"><label>Message</label><textarea id="annContent" rows="3" placeholder="Describe the update…"></textarea></div>
+          <button class="btn btn-brand" style="width:100%;justify-content:center" onclick="postAnnouncement()"><i class="fa-solid fa-paper-plane"></i> Launch Announcement</button>
+          <div style="margin-top:16px" id="myAnns"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-wrap"></div>
 
-        // Toast
-        function toast(msg, type = "success") {
-            const t = document.createElement("div");
-            t.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;color:#fff;background:${type === "success" ? "#22c55e" : "#ef4444"};box-shadow:0 8px 24px rgba(0,0,0,.4)`;
-            t.textContent = msg;
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 3000);
-        }
+<script src="faculty-shared.js"></script>
+<script>
+const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+let currentUser=null;
 
-        // Today's timetable (static data as fallback)
-        const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-        const today = DAYS[new Date().getDay()];
-        document.getElementById("todayDay").textContent = today;
+const STATIC_TT=[
+  {day:"Monday",start_time:"09:00",end_time:"10:00",room:"Lab 3",subjects:{subject_name:"Java Programming"}},
+  {day:"Monday",start_time:"11:00",end_time:"12:00",room:"Room 201",subjects:{subject_name:"Software Engineering"}},
+  {day:"Tuesday",start_time:"09:00",end_time:"10:00",room:"Room 301",subjects:{subject_name:"Deep Learning"}},
+  {day:"Wednesday",start_time:"10:00",end_time:"11:00",room:"Lab 2",subjects:{subject_name:"Java Programming"}},
+  {day:"Thursday",start_time:"11:00",end_time:"12:00",room:"Room 201",subjects:{subject_name:"Software Engineering"}},
+  {day:"Friday",start_time:"09:00",end_time:"10:00",room:"Lab 3",subjects:{subject_name:"Java Programming"}},
+];
 
-        const STATIC_TT = [
-            { day: "Monday", start_time: "09:00", end_time: "10:00", room: "Lab 3", subjects: { subject_name: "Java Programming" } },
-            { day: "Monday", start_time: "11:00", end_time: "12:00", room: "Room 201", subjects: { subject_name: "Software Engineering" } },
-            { day: "Tuesday", start_time: "09:00", end_time: "10:00", room: "Room 301", subjects: { subject_name: "Deep Learning" } },
-            { day: "Wednesday", start_time: "10:00", end_time: "11:00", room: "Lab 2", subjects: { subject_name: "Java Programming" } },
-            { day: "Thursday", start_time: "11:00", end_time: "12:00", room: "Room 201", subjects: { subject_name: "Software Engineering" } },
-            { day: "Friday", start_time: "09:00", end_time: "10:00", room: "Lab 3", subjects: { subject_name: "Java Programming" } },
-        ];
-
-        function renderTodayTT(slots) {
-            const tbody = document.getElementById("todayTT");
-            const todays = slots.filter(s => s.day === today);
-            if (!todays.length) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">No classes scheduled today</td></tr>`; return; }
-            tbody.innerHTML = todays.map(s => `<tr>
-    <td>${s.start_time} – ${s.end_time}</td>
-    <td><span class="subject-pill">${s.subjects?.subject_name || "Subject"}</span></td>
-    <td>${s.room || "—"}</td>
-    <td><a href="faculty-attendance.html" style="color:#2e7d32;font-weight:700;font-size:11px;text-decoration:none">Mark →</a></td>
+function renderTodayTT(slots){
+  const today=DAYS[new Date().getDay()];
+  document.getElementById("todayDay").textContent=today;
+  const tbody=document.getElementById("todayTT");
+  const todays=slots.filter(s=>s.day===today);
+  if(!todays.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:24px;color:#8892b0">No classes today</td></tr>`;return;}
+  tbody.innerHTML=todays.map(s=>`<tr>
+    <td style="color:#8892b0">${s.start_time} – ${s.end_time}</td>
+    <td><span class="subject-pill">${s.subjects?.subject_name||"Subject"}</span></td>
+    <td>${s.room||"—"}</td>
+    <td><a href="faculty-attendance.html" style="color:#86efac;font-size:11px;font-weight:700;text-decoration:none">Mark →</a></td>
   </tr>`).join("");
-            document.getElementById("stat-today").textContent = todays.length;
-        }
+  document.getElementById("statToday").textContent=todays.length;
+}
 
-        async function postAnnouncement() {
-            const title = document.getElementById("annTitle").value.trim();
-            const content = document.getElementById("annContent").value.trim();
-            if (!title || !content) { toast("Fill both title and content.", "error"); return; }
-            if (!currentUser) { toast("Not logged in", "error"); return; }
+async function loadGlobalNotices(){
+  const el=document.getElementById("globalNotifs");
+  const {data:msgs}=await db.from("announcements").select("*").order("created_at",{ascending:false}).limit(4);
+  if(!msgs||!msgs.length){el.innerHTML=`<div style="text-align:center;padding:20px;color:rgba(255,255,255,.2);font-size:12px">No active circulars</div>`;return;}
+  el.innerHTML=msgs.map(m=>{
+    let content=m.content||"",sName="WizUP Admin";
+    if(content.includes("::SIGN::")){const p=content.split("::SIGN::");content=p[0];sName=p[1].split("|")[0];}
+    return`<div class="notif-msg"><div style="display:flex;justify-content:space-between"><span style="font-size:10px;font-weight:800;color:#fca5a5;text-transform:uppercase">${sName}</span><span class="nm">${new Date(m.created_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</span></div><div class="nt">${m.title}</div><div class="nb">${content.substring(0,90)}${content.length>90?"…":""}</div></div>`;
+  }).join("");
+}
 
-            // 🛡️ Fail-Safe Signature: Bundle identity into plain-text at the end
-            const { data: p } = await db.from("profiles").select("full_name, employee_id, department").eq("id", currentUser.id).single();
-            const sName = p?.full_name || "Faculty Member";
-            const sId = p?.employee_id || "EMP-000";
-            const sDept = p?.department || "University";
-            
-            const finalContent = `${content} ::SIGN::${sName}|${sId}|${sDept}`;
+async function loadMyAnnouncements(){
+  if(!currentUser)return;
+  const {data}=await db.from("announcements").select("*").eq("posted_by",currentUser.id).order("created_at",{ascending:false}).limit(4);
+  const el=document.getElementById("myAnns");
+  if(!data||!data.length){el.innerHTML="";return;}
+  el.innerHTML=`<div style="font-size:11px;color:#8892b0;margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">My Recent Posts</div>`+data.map(a=>`
+  <div class="ann-item">
+    <button onclick="deleteAnn('${a.id}')" style="position:absolute;top:10px;right:10px;background:none;border:none;color:#fca5a5;cursor:pointer;font-size:12px"><i class="fa-solid fa-trash"></i></button>
+    <div class="ann-title">${a.title}</div>
+    <div class="ann-body">${(a.content||"").split("::SIGN::")[0].substring(0,80)}…</div>
+    <div class="ann-meta">${new Date(a.created_at).toLocaleDateString()}</div>
+  </div>`).join("");
+}
 
-            const { error } = await db.from("announcements").insert({ 
-                posted_by: currentUser.id, 
-                title, 
-                content: finalContent
-            });
+async function postAnnouncement(){
+  const title=document.getElementById("annTitle").value.trim();
+  const content=document.getElementById("annContent").value.trim();
+  if(!title||!content){showToast("Fill both title and content.","error");return;}
+  if(!currentUser){showToast("Not logged in","error");return;}
+  const {data:p}=await db.from("profiles").select("full_name,employee_id,department").eq("id",currentUser.id).single();
+  const sig=`${p?.full_name||"Faculty"}|${p?.employee_id||"EMP-000"}|${p?.department||"Dept"}`;
+  const {error}=await db.from("announcements").insert({posted_by:currentUser.id,title,content:`${content} ::SIGN::${sig}`});
+  if(error){showToast("Failed: "+error.message,"error");return;}
+  showToast("Announcement posted!");
+  document.getElementById("annTitle").value="";
+  document.getElementById("annContent").value="";
+  loadMyAnnouncements();loadGlobalNotices();
+}
 
-            if (error) { 
-                console.error("Post error:", error);
-                toast("Sync failed: " + error.message, "error"); 
-                return; 
-            }
-            toast("Announcement live!");
-            document.getElementById("annTitle").value = "";
-            document.getElementById("annContent").value = "";
-            loadAnnouncements();
-        }
+async function deleteAnn(id){
+  if(!confirm("Remove this announcement?"))return;
+  await db.from("announcements").delete().eq("id",id);
+  showToast("Removed","info");loadMyAnnouncements();loadGlobalNotices();
+}
 
-        async function deleteAnnouncement(id) {
-            if(!confirm("Are you sure you want to remove this announcement from the student portal?")) return;
-            
-            const { error } = await db.from("announcements").delete().eq("id", id);
-            if(error) {
-                toast("Delete failed: " + error.message, "error");
-                return;
-            }
-            toast("Announcement removed.", "success");
-            loadAnnouncements();
-        }
+async function init(){
+  const {data:{session}}=await db.auth.getSession();
+  if(!session){window.location.href="faculty-signin.html";return;}
+  currentUser=session.user;
+  const {data:profile}=await db.from("profiles").select("*").eq("id",currentUser.id).single();
+  if(!profile||!["faculty","hod"].includes(profile.role)){window.location.href="../index.html";return;}
+  document.body.style.display="block";
+  const name=profile.full_name||"Faculty";
+  document.getElementById("uName").textContent=name.split(" ")[0];
+  document.getElementById("uAvatar").textContent=name[0].toUpperCase();
+  document.getElementById("welcomeName").textContent="Welcome, "+name;
+  document.getElementById("empCode").textContent=profile.employee_code||profile.employee_id||"—";
+  document.getElementById("deptName").textContent=profile.department||"CSE";
+  // Subjects
+  const {data:subs}=await db.from("subjects").select("*").eq("faculty_id",currentUser.id);
+  document.getElementById("statSubjects").textContent=subs?.length||0;
+  document.getElementById("statStudents").textContent=40;
+  // TT
+  const {data:tt}=await db.from("timetable").select("*,subjects(subject_name)").order("start_time");
+  const myIds=(subs||[]).map(s=>s.id);
+  renderTodayTT((tt||[]).filter(t=>myIds.includes(t.subject_id)).length?tt.filter(t=>myIds.includes(t.subject_id)):STATIC_TT);
+  // Leave count
+  const {count}=await db.from("leave_requests").select("*",{count:"exact",head:true}).eq("status","pending");
+  document.getElementById("leaveCount").textContent=count||0;
+  loadGlobalNotices();loadMyAnnouncements();
+}
 
-        async function loadAnnouncements() {
-            const { data } = await db.from("announcements").select("*").eq("posted_by", currentUser.id).order("created_at", { ascending: false }).limit(5);
-            const el = document.getElementById("annItems");
-            if (!data || !data.length) { el.innerHTML = `<div style="color:rgba(148,163,184,.5);font-size:12px;text-align:center;padding:16px">No previous circulars found</div>`; return; }
-            el.innerHTML = data.map(a => `
-                <div class="ann-item" style="position:relative; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:12px; border-radius:12px; margin-bottom:8px;">
-                    <button onclick="deleteAnnouncement('${a.id}')" style="position:absolute; top:10px; right:10px; background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:14px;" title="Retract Announcement"><i class="fa-solid fa-trash"></i></button>
-                    <div class="ann-title" style="font-weight:800; font-size:13px; color:var(--primary); margin-bottom:4px;">${a.title}</div>
-                    <div class="ann-body" style="font-size:11px; color:rgba(255,255,255,0.6); line-height:1.4;">${a.content.split("::SIGN::")[0]}</div>
-                    <div class="ann-meta" style="font-size:9px; color:rgba(255,255,255,0.3); margin-top:6px;">${new Date(a.created_at).toLocaleDateString()}</div>
-                </div>`).join("");
-        }
-
-        // 🛡️ Global Notification Hub (The "Student-Style" box)
-        async function loadGlobalNotices() {
-            const list = document.getElementById('globalNotifs');
-            const { data: msgs, error } = await db.from('announcements').select('*').order('created_at', { ascending: false }).limit(4);
-            
-            if (error || !msgs || msgs.length === 0) {
-                list.innerHTML = `<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2); font-size:11px;">No active circulars</div>`;
-                return;
-            }
-
-            list.innerHTML = msgs.map(m => {
-                const date = new Date(m.created_at);
-                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                let content = m.content || '';
-                let sName = 'WizUP Admin';
-
-                // Digital Signature Identity
-                if(content.includes("::SIGN::")) {
-                    const parts = content.split("::SIGN::");
-                    content = parts[0];
-                    sName = parts[1].split("|")[0];
-                }
-
-                return `
-                    <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:12px; display:flex; flex-direction:column; gap:4px; transition:0.2s;" onmouseover="this.style.background='rgba(229,56,59,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:10px; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:0.5px;">${sName}</span>
-                            <span style="font-size:9px; color:rgba(255,255,255,0.4);">${timeStr}</span>
-                        </div>
-                        <div style="font-family:'Outfit'; font-size:13px; font-weight:700; color:#fff;">${m.title}</div>
-                        <div style="font-size:11px; color:rgba(255,255,255,0.6); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${content}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        async function initDashboard() {
-            const { data: { session } } = await db.auth.getSession();
-            if (!session) { window.location.href = "faculty-signin.html"; return; }
-            currentUser = session.user;
-
-            const { data: profile } = await db.from("profiles").select("*").eq("id", currentUser.id).single();
-            if (!profile || (profile.role !== "faculty" && profile.role !== "hod")) { 
-                console.error("Access Denied: Wrong Role for Faculty Portal.");
-                window.location.href = "../index.html"; 
-                return; 
-            }
-
-            document.body.style.display = 'block';
-
-            const name = profile.full_name || "Faculty";
-            const fn = name.split(" ")[0];
-            document.getElementById("uName").textContent = fn;
-            document.getElementById("uInitial").textContent = fn[0].toUpperCase();
-            document.getElementById("welcomeName").textContent = "Welcome, " + name;
-            document.getElementById("empCode").textContent = profile.employee_code || "—";
-            document.getElementById("deptName").textContent = profile.department || "CSE";
-
-            // Dashboard Data
-            const { data: subjects } = await db.from("subjects").select("*").eq("faculty_id", currentUser.id);
-            if (subjects) document.getElementById("stat-subjects").textContent = subjects.length;
-            document.getElementById("stat-students").textContent = 40; 
-
-            // Schedule
-            const { data: tt } = await db.from("timetable").select("*,subjects(subject_name,faculty_id)").order("start_time");
-            if (tt) {
-                const mySubjectIds = subjects ? subjects.map(s => s.id) : [];
-                const myTT = tt.filter(t => mySubjectIds.includes(t.subject_id));
-                renderTodayTT(myTT.length ? myTT : STATIC_TT);
-            } else {
-                renderTodayTT(STATIC_TT);
-            }
-
-            // Sync Circulars
-            loadGlobalNotices();
-            loadAnnouncements();
-        }
-
-        initDashboard().catch(() => {
-            renderTodayTT(STATIC_TT);
-            document.body.style.display = 'block';
-        });
-    </script>
+init().catch(()=>{renderTodayTT(STATIC_TT);document.body.style.display="block";});
+</script>
 </body>
-
 </html>
