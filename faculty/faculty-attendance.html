@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Attendance Hub – WizUP Faculty</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="faculty-shared.css"/>
+<style>
+.glass-panel{background:rgba(15,20,30,.7);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.08);padding:28px;border-radius:24px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.controls{display:grid;grid-template-columns:1fr auto;gap:16px;margin-bottom:24px;align-items:end}
+.input-group{display:flex;flex-direction:column;gap:7px}
+.input-group label{font-size:11px;font-weight:800;text-transform:uppercase;color:rgba(255,255,255,.4);letter-spacing:1px}
+.input-group select,.input-group input[type="date"]{padding:14px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);border-radius:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;transition:.3s;outline:none}
+.input-group select:focus,.input-group input:focus{border-color:#e5383b;box-shadow:0 0 0 3px rgba(229,56,59,.12)}
+.input-group input:disabled{opacity:.4;background:rgba(255,255,255,.02);color:rgba(255,255,255,.5);border-color:transparent}
+.rectify-btn{height:50px;padding:0 20px;background:rgba(245,158,11,.1);border:1px solid #f59e0b;color:#f59e0b;border-radius:14px;font-family:'Outfit',sans-serif;font-weight:800;font-size:12px;text-transform:uppercase;cursor:pointer;transition:.3s;display:flex;align-items:center;gap:8px;align-self:end}
+.rectify-btn:hover{background:#f59e0b;color:#000}
+.rectify-btn.active{background:#22c55e;border-color:#22c55e;color:#000}
+.live-stats{display:flex;gap:24px;margin-bottom:22px;padding:14px 22px;background:rgba(255,255,255,.03);border-radius:16px;border:1px solid rgba(255,255,255,.07)}
+.stat-item{display:flex;flex-direction:column}
+.stat-val{font-family:'Outfit',sans-serif;font-size:20px;font-weight:900}
+.stat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;opacity:.5}
+.roster-list{max-height:460px;overflow-y:auto;padding-right:6px;margin-bottom:20px}
+.stu-row{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:rgba(255,255,255,.02);border-radius:14px;margin-bottom:8px;border:1px solid transparent;transition:.2s}
+.stu-row:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);transform:translateX(4px)}
+.stu-info{display:flex;flex-direction:column}
+.stu-name{font-weight:700;font-size:14px}
+.stu-roll{font-size:11px;opacity:.45;margin-top:2px}
+.btn-group{display:flex;gap:8px}
+.btn-att{width:44px;height:42px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);color:rgba(255,255,255,.3);font-weight:900;cursor:pointer;transition:.25s;font-size:13px}
+.btn-att.p-active{background:#22c55e!important;color:#000!important;border-color:#22c55e!important;box-shadow:0 4px 15px rgba(34,197,94,.3)}
+.btn-att.a-active{background:#ef4444!important;color:#fff!important;border-color:#ef4444!important;box-shadow:0 4px 15px rgba(239,68,68,.3)}
+.submit-btn{width:100%;padding:18px;border-radius:16px;border:none;background:linear-gradient(135deg,#e5383b,#b21f2d);color:#fff;font-family:'Outfit',sans-serif;font-weight:900;font-size:16px;text-transform:uppercase;cursor:pointer;box-shadow:0 10px 40px rgba(229,56,59,.2);transition:.3s;display:flex;align-items:center;justify-content:center;gap:12px}
+.submit-btn:hover{transform:translateY(-3px);box-shadow:0 15px 50px rgba(229,56,59,.4)}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;background:#333;color:#666}
+.empty-state{text-align:center;padding:40px;color:rgba(255,255,255,.3)}
+.empty-state i{font-size:48px;margin-bottom:16px;display:block}
+.mode-badge{display:inline-flex;padding:4px 12px;border-radius:99px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-left:10px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header class="header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo"/>
+  <div class="h-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Search students…"/></div>
+  <div class="h-actions">
+    <div id="clock" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;color:#e5383b;margin-right:6px">00:00</div>
+    <a href="faculty-dashboard.html" class="h-btn" title="Dashboard"><i class="fa-solid fa-house"></i></a>
+    <a href="faculty-notifications.html" class="h-btn"><i class="fa-solid fa-bell"></i></a>
+    <div class="user-profile"><div class="up-avatar" id="uAvatar">F</div><div class="up-info"><span class="up-name" id="uName">Faculty</span><span class="up-role">Faculty Hub</span></div></div>
+    <button class="h-btn" onclick="doSignOut()"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+
+<div class="main-container">
+  <aside class="sidebar">
+    <div class="sidebar-section open">
+      <div class="sidebar-header">ATTENDANCE<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu"><a href="faculty-attendance.html" class="active">Mark Attendance</a></div>
+    </div>
+    <div class="sidebar-section open">
+      <div class="sidebar-header">ACADEMICS<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu">
+        <a href="faculty-timetable.html">My Timetable</a>
+        <a href="faculty-marks.html">Internal Marks</a>
+        <a href="faculty-assignments.html">Assignments</a>
+        <a href="faculty-subjects.html">Course Materials</a>
+      </div>
+    </div>
+    <div class="sidebar-section open">
+      <div class="sidebar-header">STUDENTS<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu">
+        <a href="faculty-students.html">Student Monitoring</a>
+        <a href="faculty-leave-approvals.html">Leave Approvals</a>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-header">PERSONAL<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu">
+        <a href="faculty-profile.html">My Profile</a>
+        <a href="faculty-leave.html">Apply Leave</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h2 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;display:flex;align-items:center;gap:10px">
+        <i class="fa-solid fa-clipboard-check" style="color:#e5383b"></i>
+        <span id="pageTitle">Mark Today</span>
+        <span class="mode-badge" id="modeBadge" style="background:rgba(34,197,94,.2);color:#86efac">Live</span>
+      </h2>
+      <a href="faculty-dashboard.html" style="color:#8892b0;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <div class="glass-panel">
+      <div class="controls">
+        <div class="input-group">
+          <label>Your Assigned Subject</label>
+          <select id="subjectSelect"><option value="">Fetching your roster…</option></select>
+        </div>
+        <button id="rectifyToggle" class="rectify-btn"><i class="fa-solid fa-calendar-day"></i> Rectify</button>
+        <div class="input-group" id="dateGroup" style="display:none;grid-column:1/span 2">
+          <label>Select Date for Rectification</label>
+          <input type="date" id="dateFilter" disabled/>
+        </div>
+      </div>
+
+      <div class="live-stats">
+        <div class="stat-item"><span class="stat-lbl">Strength</span><span class="stat-val" id="statTot">0</span></div>
+        <div class="stat-item"><span class="stat-lbl" style="color:#86efac">Present</span><span class="stat-val" id="statPre" style="color:#86efac">0</span></div>
+        <div class="stat-item"><span class="stat-lbl" style="color:#fca5a5">Absent</span><span class="stat-val" id="statAbs" style="color:#fca5a5">0</span></div>
+        <div class="stat-item"><span class="stat-lbl">Unmarked</span><span class="stat-val" id="statUnm" style="color:#8892b0">0</span></div>
+      </div>
+
+      <div class="roster-list" id="rosterList">
+        <div class="empty-state"><i class="fa-solid fa-users-viewfinder"></i><p>Select a subject to begin marking register</p></div>
+      </div>
+
+      <button id="submitBtn" class="submit-btn" disabled><i class="fa-solid fa-cloud-arrow-up"></i><span>Submit Register</span></button>
+    </div>
+  </main>
+</div>
+<div id="toast-wrap"></div>
+
+<script src="faculty-shared.js"></script>
+<script>
+let currentFaculty=null,students=[],attendanceMap={},isRectify=false;
+
+document.addEventListener("DOMContentLoaded",async()=>{
+  document.getElementById("dateFilter").valueAsDate=new Date();
+  currentFaculty=await requireAuth(["faculty","hod"]);
+  if(!currentFaculty)return;
+  await loadSubjects();
+  document.getElementById("subjectSelect").addEventListener("change",refreshRoster);
+  document.getElementById("dateFilter").addEventListener("change",refreshRoster);
+
+  document.getElementById("rectifyToggle").onclick=function(){
+    isRectify=!isRectify;
+    const grp=document.getElementById("dateGroup");
+    const picker=document.getElementById("dateFilter");
+    const badge=document.getElementById("modeBadge");
+    if(isRectify){
+      this.classList.add("active");
+      this.innerHTML=`<i class="fa-solid fa-check-circle"></i> Back to Live`;
+      grp.style.display="flex";picker.disabled=false;
+      badge.textContent="Rectify";badge.style.background="rgba(245,158,11,.2)";badge.style.color="#fcd34d";
+      document.getElementById("pageTitle").textContent="Rectify Records";
+    }else{
+      this.classList.remove("active");
+      this.innerHTML=`<i class="fa-solid fa-calendar-day"></i> Rectify`;
+      grp.style.display="none";picker.disabled=true;picker.valueAsDate=new Date();
+      badge.textContent="Live";badge.style.background="rgba(34,197,94,.2)";badge.style.color="#86efac";
+      document.getElementById("pageTitle").textContent="Mark Today";
+      refreshRoster();
+    }
+  };
+});
+
+async function loadSubjects(){
+  const {data:subs}=await db.from("subjects").select("id,name,subject_code").eq("faculty_id",currentFaculty.id);
+  const sel=document.getElementById("subjectSelect");
+  sel.innerHTML=subs&&subs.length
+    ?'<option value="">— Choose Subject —</option>'+subs.map(s=>`<option value="${s.id}">${s.name} (${s.subject_code})</option>`).join("")
+    :'<option value="">No subjects assigned</option>';
+}
+
+async function refreshRoster(){
+  const subId=document.getElementById("subjectSelect").value;
+  const date=document.getElementById("dateFilter").value;
+  const listEl=document.getElementById("rosterList");
+  if(!subId){listEl.innerHTML='<div class="empty-state"><i class="fa-solid fa-users-viewfinder"></i><p>Select a subject to begin</p></div>';document.getElementById("submitBtn").disabled=true;return;}
+  listEl.innerHTML='<div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading class list…</p></div>';
+  attendanceMap={};
+  const {data:alloc}=await db.from("subject_allocations").select("profiles:student_id(id,full_name,roll_no)").eq("subject_id",subId);
+  students=(alloc||[]).map(a=>Array.isArray(a.profiles)?a.profiles[0]:a.profiles).filter(Boolean);
+  const {data:existing}=await db.from("attendance").select("student_id,status").eq("subject_id",subId).eq("date",date);
+  if(existing)existing.forEach(e=>attendanceMap[e.student_id]=e.status);
+  renderStudents();
+  document.getElementById("submitBtn").disabled=false;
+}
+
+function renderStudents(){
+  const listEl=document.getElementById("rosterList");
+  if(!students.length){listEl.innerHTML='<div class="empty-state" style="color:#fca5a5"><i class="fa-solid fa-ban"></i><p>No students enrolled in this subject</p></div>';updateCounts();return;}
+  listEl.innerHTML=students.map(s=>{
+    const status=attendanceMap[s.id];
+    return`<div class="stu-row">
+      <div class="stu-info"><span class="stu-name">${s.full_name}</span><span class="stu-roll">${s.roll_no||"No Roll #"}</span></div>
+      <div class="btn-group">
+        <button class="btn-att ${status==="present"?"p-active":""}" onclick="mark('${s.id}','present',this)">P</button>
+        <button class="btn-att ${status==="absent"?"a-active":""}" onclick="mark('${s.id}','absent',this)">A</button>
+      </div>
+    </div>`;
+  }).join("");
+  updateCounts();
+}
+
+function mark(id,status,btn){
+  attendanceMap[id]=status;
+  const parent=btn.parentElement;
+  parent.querySelectorAll(".btn-att").forEach(b=>b.classList.remove("p-active","a-active"));
+  btn.classList.add(status==="present"?"p-active":"a-active");
+  updateCounts();
+}
+
+function updateCounts(){
+  let p=0,a=0;
+  Object.values(attendanceMap).forEach(v=>{if(v==="present")p++;else if(v==="absent")a++;});
+  document.getElementById("statTot").textContent=students.length;
+  document.getElementById("statPre").textContent=p;
+  document.getElementById("statAbs").textContent=a;
+  document.getElementById("statUnm").textContent=students.length-Object.keys(attendanceMap).length;
+}
+
+document.getElementById("submitBtn").onclick=async()=>{
+  const subId=document.getElementById("subjectSelect").value;
+  const date=document.getElementById("dateFilter").value;
+  const btn=document.getElementById("submitBtn");
+  const keys=Object.keys(attendanceMap);
+  if(!keys.length)return showToast("Mark at least one student","error");
+  btn.disabled=true;btn.querySelector("span").textContent="Synchronizing…";
+  const results=await Promise.all(keys.map(uid=>db.from("attendance").upsert({student_id:uid,subject_id:subId,date,status:attendanceMap[uid],marked_by:currentFaculty.id},{onConflict:"student_id,subject_id,date"})));
+  const errs=results.filter(r=>r.error);
+  if(errs.length){showToast("Failed to sync some records","error");btn.disabled=false;btn.querySelector("span").textContent="Retry Submit";}
+  else{showToast(`Register uploaded — ${keys.length} students marked`,"success");btn.disabled=false;btn.querySelector("span").textContent="Submit Register";}
+};
+</script>
+</body>
+</html>

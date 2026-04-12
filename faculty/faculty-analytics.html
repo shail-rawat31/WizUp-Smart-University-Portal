@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Classroom Analytics – WizUP Faculty</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="faculty-shared.css"/>
+<style>
+.chart-wrap{position:relative;height:220px}
+.defaulter-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.defaulter-row:last-child{border-bottom:none}
+.def-avatar{width:38px;height:38px;border-radius:50%;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fca5a5;flex-shrink:0}
+.def-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.def-sub{font-size:11px;color:#8892b0}
+.pct-bar{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;min-width:80px}
+.pct-fill{height:100%;border-radius:3px}
+.subject-perf-card{padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(0,0,0,.2);transition:.2s}
+.subject-perf-card:hover{border-color:rgba(229,56,59,.3);background:rgba(229,56,59,.05)}
+</style>
+</head>
+<body>
+<header class="header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo"/>
+  <div class="h-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Search analytics…"/></div>
+  <div class="h-actions">
+    <div id="clock" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;color:#e5383b;margin-right:6px">00:00</div>
+    <a href="faculty-dashboard.html" class="h-btn"><i class="fa-solid fa-house"></i></a>
+    <a href="faculty-notifications.html" class="h-btn"><i class="fa-solid fa-bell"></i></a>
+    <div class="user-profile"><div class="up-avatar" id="uAvatar">F</div><div class="up-info"><span class="up-name" id="uName">Faculty</span><span class="up-role">Faculty Hub</span></div></div>
+    <button class="h-btn" onclick="doSignOut()"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+
+<div class="main-container">
+  <aside class="sidebar">
+    <div class="sidebar-section open">
+      <div class="sidebar-header">ATTENDANCE<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu"><a href="faculty-attendance.html">Mark Attendance</a></div>
+    </div>
+    <div class="sidebar-section open">
+      <div class="sidebar-header">ACADEMICS<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu">
+        <a href="faculty-timetable.html">My Timetable</a>
+        <a href="faculty-marks.html">Internal Marks</a>
+        <a href="faculty-assignments.html">Assignments</a>
+      </div>
+    </div>
+    <div class="sidebar-section open">
+      <div class="sidebar-header">INSIGHTS<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu">
+        <a href="faculty-analytics.html" class="active">Analytics</a>
+        <a href="faculty-students.html">Student Monitoring</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h2 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;display:flex;align-items:center;gap:10px">
+        <i class="fa-solid fa-chart-pie" style="color:#e5383b"></i> Classroom Analytics
+      </h2>
+      <a href="faculty-dashboard.html" style="color:#8892b0;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-users" style="color:#fca5a5"></i> Total Students</div><div class="stat-val" id="sc-total">—</div><div class="stat-sub">Across all subjects</div></div>
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-triangle-exclamation" style="color:#fcd34d"></i> Defaulters</div><div class="stat-val" id="sc-def" style="color:#fca5a5">—</div><div class="stat-sub">Below 75% attendance</div></div>
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-chart-bar" style="color:#86efac"></i> Avg Attendance</div><div class="stat-val" id="sc-avg" style="color:#86efac">—</div><div class="stat-sub">Department average</div></div>
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-star" style="color:#fcd34d"></i> Avg Marks (MST)</div><div class="stat-val" id="sc-marks" style="color:#fcd34d">—</div><div class="stat-sub">Out of 30</div></div>
+    </div>
+
+    <div class="grid2">
+      <!-- Attendance trend chart -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-chart-line" style="color:#fca5a5"></i> Weekly Attendance Trend</h3></div>
+        <div class="card-bd"><div class="chart-wrap"><canvas id="trendChart"></canvas></div></div>
+      </div>
+      <!-- Marks distribution -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-chart-bar" style="color:#fca5a5"></i> MST Marks Distribution</h3></div>
+        <div class="card-bd"><div class="chart-wrap"><canvas id="marksChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- Defaulters list -->
+    <div class="card">
+      <div class="card-hd">
+        <h3><i class="fa-solid fa-triangle-exclamation" style="color:#fca5a5"></i> Attendance Defaulters (Below 75%)</h3>
+        <span style="font-size:11px;color:#8892b0" id="defCount">Loading…</span>
+      </div>
+      <div class="card-bd" id="defaulterList"><div style="text-align:center;padding:24px;color:#8892b0"><i class="fa-solid fa-spinner fa-spin"></i> Loading defaulters…</div></div>
+    </div>
+
+    <!-- Subject performance -->
+    <div class="card">
+      <div class="card-hd"><h3><i class="fa-solid fa-book" style="color:#fca5a5"></i> Subject-wise Performance</h3></div>
+      <div class="card-bd">
+        <div class="grid3" id="subjPerf"><div style="text-align:center;padding:24px;color:#8892b0;grid-column:1/-1"><i class="fa-solid fa-spinner fa-spin"></i></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-wrap"></div>
+
+<script src="faculty-shared.js"></script>
+<script>
+const SUBJECTS_STATIC=["Data Structures","OS","DBMS","Networks","SE","ML"];
+const ATT_WEEKS=["Week 1","Week 2","Week 3","Week 4","Week 5"];
+const ATT_DATA=[82,78,85,74,88];
+const MARKS_LABELS=["0–10","11–15","16–20","21–25","26–30"];
+const MARKS_DATA=[2,5,12,18,8];
+
+const DEFAULTERS_STATIC=[
+  {name:"Rahul Kumar",roll:"CSE101",pct:68,subject:"Data Structures"},
+  {name:"Priya Shah",roll:"CSE107",pct:71,subject:"Machine Learning"},
+  {name:"Vikram Nair",roll:"CSE115",pct:62,subject:"OS"},
+  {name:"Sneha Patel",roll:"CSE122",pct:73,subject:"Networks"},
+  {name:"Arjun Mehta",roll:"CSE134",pct:59,subject:"DBMS"},
+];
+
+document.addEventListener("DOMContentLoaded",async()=>{
+  const prof=await requireAuth(["faculty","hod"]);
+  if(!prof)return;
+
+  document.getElementById("sc-total").textContent=40;
+  document.getElementById("sc-def").textContent=DEFAULTERS_STATIC.length;
+  document.getElementById("sc-avg").textContent="76%";
+  document.getElementById("sc-marks").textContent="21.4";
+
+  // Charts
+  const tCtx=document.getElementById("trendChart").getContext("2d");
+  new Chart(tCtx,{type:"line",data:{labels:ATT_WEEKS,datasets:[{label:"Attendance %",data:ATT_DATA,borderColor:"rgba(229,56,59,.8)",backgroundColor:"rgba(229,56,59,.08)",fill:true,tension:.4,pointRadius:4,pointBackgroundColor:"rgba(229,56,59,1)",borderWidth:2},{label:"75% Threshold",data:[75,75,75,75,75],borderColor:"rgba(245,158,11,.5)",borderWidth:2,borderDash:[5,5],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#8892b0",font:{size:11}}}},scales:{y:{min:50,max:100,grid:{color:"rgba(255,255,255,.05)"},ticks:{color:"#8892b0",font:{size:10},callback:v=>v+"%"},border:{color:"transparent"}},x:{grid:{display:false},ticks:{color:"#8892b0",font:{size:10}},border:{color:"transparent"}}}}});
+
+  const mCtx=document.getElementById("marksChart").getContext("2d");
+  new Chart(mCtx,{type:"bar",data:{labels:MARKS_LABELS,datasets:[{label:"Students",data:MARKS_DATA,backgroundColor:MARKS_DATA.map((_,i)=>`rgba(229,56,59,${.3+i*.1})`),borderColor:MARKS_DATA.map((_,i)=>`rgba(229,56,59,${.6+i*.08})`),borderWidth:1,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:"rgba(255,255,255,.05)"},ticks:{color:"#8892b0",font:{size:10}},border:{color:"transparent"}},x:{grid:{display:false},ticks:{color:"#8892b0",font:{size:10}},border:{color:"transparent"}}}}});
+
+  // Defaulters
+  document.getElementById("defCount").textContent=DEFAULTERS_STATIC.length+" students";
+  document.getElementById("defaulterList").innerHTML=DEFAULTERS_STATIC.map(d=>`
+  <div class="defaulter-row">
+    <div class="def-avatar">${d.name[0]}</div>
+    <div style="flex:1;min-width:0">
+      <div class="def-name">${d.name}</div>
+      <div class="def-sub">${d.roll} · ${d.subject}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;min-width:160px">
+      <div class="pct-bar"><div class="pct-fill" style="width:${d.pct}%;background:${d.pct<65?"#ef4444":"#f59e0b"}"></div></div>
+      <span style="font-size:13px;font-weight:700;color:${d.pct<65?"#fca5a5":"#fcd34d"};min-width:36px">${d.pct}%</span>
+    </div>
+    <button class="btn btn-sm btn-red" onclick="showToast('Warning sent to ${d.name}','info')"><i class="fa-solid fa-bell"></i> Warn</button>
+  </div>`).join("");
+
+  // Subject perf
+  document.getElementById("subjPerf").innerHTML=SUBJECTS_STATIC.map((s,i)=>{
+    const att=70+Math.floor(Math.random()*20);
+    const marks=18+Math.floor(Math.random()*10);
+    return`<div class="subject-perf-card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">${s}</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#8892b0;margin-bottom:5px"><span>Attendance</span><span style="color:${att>=75?"#86efac":"#fca5a5"};font-weight:700">${att}%</span></div>
+      <div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:10px"><div style="width:${att}%;height:100%;background:${att>=75?"#22c55e":"#ef4444"};border-radius:2px"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#8892b0;margin-bottom:5px"><span>Avg MST</span><span style="color:#fcd34d;font-weight:700">${marks}/30</span></div>
+      <div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden"><div style="width:${Math.round(marks/30*100)}%;height:100%;background:#f59e0b;border-radius:2px"></div></div>
+    </div>`;
+  }).join("");
+});
+</script>
+</body>
+</html>

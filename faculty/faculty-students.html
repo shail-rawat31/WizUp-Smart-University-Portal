@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Student Monitoring – WizUP Faculty</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="faculty-shared.css"/>
+<style>
+.stu-card{display:flex;align-items:center;gap:16px;padding:16px 18px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(0,0,0,.2);transition:.25s;margin-bottom:10px;cursor:pointer}
+.stu-card:hover{border-color:rgba(229,56,59,.3);background:rgba(229,56,59,.05);transform:translateX(4px)}
+.stu-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;flex-shrink:0}
+.stu-name{font-size:15px;font-weight:700;margin-bottom:2px}
+.stu-meta{font-size:11px;color:#8892b0}
+.att-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.filter-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-tab{padding:6px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:none;color:#8892b0;cursor:pointer;font-size:12px;font-weight:700;transition:.2s;font-family:'Inter',sans-serif}
+.filter-tab.active{background:rgba(229,56,59,.12);border-color:rgba(229,56,59,.35);color:#fca5a5}
+</style>
+</head>
+<body>
+<header class="header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo"/>
+  <div class="h-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="globalSearch" placeholder="Search students…" oninput="filterStudents(this.value)"/></div>
+  <div class="h-actions">
+    <div id="clock" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;color:#e5383b;margin-right:6px">00:00</div>
+    <a href="faculty-dashboard.html" class="h-btn"><i class="fa-solid fa-house"></i></a>
+    <a href="faculty-notifications.html" class="h-btn"><i class="fa-solid fa-bell"></i></a>
+    <div class="user-profile"><div class="up-avatar" id="uAvatar">F</div><div class="up-info"><span class="up-name" id="uName">Faculty</span><span class="up-role">Faculty Hub</span></div></div>
+    <button class="h-btn" onclick="doSignOut()"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+<div class="main-container">
+  <aside class="sidebar">
+    <div class="sidebar-section open"><div class="sidebar-header">ATTENDANCE<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-attendance.html">Mark Attendance</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">ACADEMICS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-timetable.html">My Timetable</a><a href="faculty-marks.html">Internal Marks</a><a href="faculty-assignments.html">Assignments</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">STUDENTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-students.html" class="active">Student Monitoring</a><a href="faculty-leave-approvals.html">Leave Approvals</a></div></div>
+    <div class="sidebar-section"><div class="sidebar-header">INSIGHTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-analytics.html">Analytics</a></div></div>
+  </aside>
+  <main class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h2 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;display:flex;align-items:center;gap:10px"><i class="fa-solid fa-users-viewfinder" style="color:#e5383b"></i> Student Monitoring</h2>
+      <a href="faculty-dashboard.html" style="color:#8892b0;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom:18px">
+      <div class="stat-card"><div class="stat-lbl">Total Students</div><div class="stat-val" id="sc-total">—</div></div>
+      <div class="stat-card"><div class="stat-lbl" style="color:#86efac">Above 75%</div><div class="stat-val" id="sc-safe" style="color:#86efac">—</div></div>
+      <div class="stat-card"><div class="stat-lbl" style="color:#fca5a5">Defaulters</div><div class="stat-val" id="sc-def" style="color:#fca5a5">—</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">
+        <h3><i class="fa-solid fa-users" style="color:#fca5a5"></i> Student List</h3>
+        <input type="text" placeholder="Search by name or roll…" style="width:200px;padding:7px 12px;border-radius:8px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none" oninput="filterStudents(this.value)"/>
+      </div>
+      <div class="card-bd">
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
+          <button class="filter-tab" onclick="setFilter('safe',this)">Safe (≥75%)</button>
+          <button class="filter-tab" onclick="setFilter('risk',this)">At Risk (60–74%)</button>
+          <button class="filter-tab" onclick="setFilter('danger',this)">Detained (&lt;60%)</button>
+        </div>
+        <div id="studentList"><div style="text-align:center;padding:30px;color:#8892b0"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px"></i></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-wrap"></div>
+<script src="faculty-shared.js"></script>
+<script>
+const COLORS=["rgba(229,56,59,.2)","rgba(56,189,248,.2)","rgba(34,197,94,.2)","rgba(167,139,250,.2)","rgba(245,158,11,.2)"];
+const CTEXT=["#fca5a5","#7dd3fc","#86efac","#c4b5fd","#fcd34d"];
+let allStudents=[];
+let activeFilter="all";
+
+document.addEventListener("DOMContentLoaded",async()=>{
+  await requireAuth(["faculty","hod"]);
+  // Try DB first, fall back to demo data
+  const {data:stds}=await db.from("profiles").select("*").eq("role","student");
+  if(stds&&stds.length){
+    allStudents=stds.map((s,i)=>({...s,att:60+Math.floor(Math.random()*35),color:i%5}));
+  }else{
+    allStudents=Array.from({length:20},(_,i)=>({id:i,full_name:["Arjun Sharma","Priya Patel","Rohit Kumar","Sneha Gupta","Vikram Singh","Ananya Mehta","Kiran Reddy","Deepak Joshi","Pooja Verma","Rahul Nair","Ishaan Kapoor","Meera Pillai","Aditya Rao","Sana Khan","Nikhil Desai","Riya Thomas","Sachin Bhat","Divya Iyer","Harsh Mishra","Nisha Jain"][i],roll_no:`CSE${String(101+i).padStart(3,"0")}`,att:58+Math.floor(Math.random()*37),color:i%5}));
+  }
+  updateStats();renderList();
+});
+
+function updateStats(){
+  document.getElementById("sc-total").textContent=allStudents.length;
+  document.getElementById("sc-safe").textContent=allStudents.filter(s=>s.att>=75).length;
+  document.getElementById("sc-def").textContent=allStudents.filter(s=>s.att<75).length;
+}
+
+function setFilter(f,btn){
+  activeFilter=f;
+  document.querySelectorAll(".filter-tab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderList();
+}
+
+function filterStudents(q){
+  renderList(q);
+}
+
+function renderList(q=""){
+  let filtered=allStudents;
+  if(activeFilter==="safe")filtered=filtered.filter(s=>s.att>=75);
+  else if(activeFilter==="risk")filtered=filtered.filter(s=>s.att>=60&&s.att<75);
+  else if(activeFilter==="danger")filtered=filtered.filter(s=>s.att<60);
+  if(q)filtered=filtered.filter(s=>(s.full_name||"").toLowerCase().includes(q.toLowerCase())||(s.roll_no||"").toLowerCase().includes(q.toLowerCase()));
+  const el=document.getElementById("studentList");
+  if(!filtered.length){el.innerHTML=`<div style="text-align:center;padding:30px;color:#8892b0">No students match this filter</div>`;return;}
+  el.innerHTML=filtered.map(s=>{
+    const clr=s.att>=75?"#86efac":s.att>=60?"#fcd34d":"#fca5a5";
+    const dotClr=s.att>=75?"#22c55e":s.att>=60?"#f59e0b":"#ef4444";
+    return`<div class="stu-card" onclick="showToast('Detailed view for ${s.full_name} coming soon','info')">
+      <div class="stu-avatar" style="background:${COLORS[s.color||0]};color:${CTEXT[s.color||0]}">${(s.full_name||"S")[0]}</div>
+      <div style="flex:1;min-width:0">
+        <div class="stu-name">${s.full_name||"Student"}</div>
+        <div class="stu-meta">${s.roll_no||"N/A"} · <span style="color:${clr};font-weight:700"><span class="att-dot" style="background:${dotClr}"></span>${s.att}% attendance</span></div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="badge b-${s.att>=75?"green":s.att>=60?"amber":"red"}">${s.att>=75?"Safe":s.att>=60?"At Risk":"Detained"}</span>
+        <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();showToast('Notified ${s.full_name}','info')"><i class="fa-solid fa-bell"></i></button>
+      </div>
+    </div>`;
+  }).join("");
+}
+</script>
+</body>
+</html>

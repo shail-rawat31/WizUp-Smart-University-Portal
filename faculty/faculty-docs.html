@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Document Verification – WizUP Faculty</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="faculty-shared.css"/>
+<style>
+.doc-card{padding:18px 20px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(0,0,0,.2);transition:.25s;margin-bottom:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.doc-card:hover{border-color:rgba(229,56,59,.3);background:rgba(229,56,59,.04)}
+.doc-card.unverified{border-left:3px solid #fcd34d}
+.doc-card.verified{border-left:3px solid #86efac}
+.doc-card.rejected{border-left:3px solid #fca5a5}
+.doc-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.doc-name{font-size:14px;font-weight:700;margin-bottom:3px}
+.doc-meta{font-size:11px;color:#8892b0;line-height:1.6}
+.doc-preview{width:100%;padding:14px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);border-radius:10px;margin-top:10px;display:flex;align-items:center;gap:12px;font-size:12px;color:#8892b0}
+</style>
+</head>
+<body>
+<header class="header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo"/>
+  <div class="h-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Search documents…"/></div>
+  <div class="h-actions">
+    <div id="clock" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;color:#e5383b;margin-right:6px">00:00</div>
+    <a href="faculty-dashboard.html" class="h-btn"><i class="fa-solid fa-house"></i></a>
+    <a href="faculty-notifications.html" class="h-btn"><i class="fa-solid fa-bell"></i></a>
+    <div class="user-profile"><div class="up-avatar" id="uAvatar">F</div><div class="up-info"><span class="up-name" id="uName">Faculty</span><span class="up-role">Faculty Hub</span></div></div>
+    <button class="h-btn" onclick="doSignOut()"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+
+<div class="main-container">
+  <aside class="sidebar">
+    <div class="sidebar-section open"><div class="sidebar-header">ATTENDANCE<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-attendance.html">Mark Attendance</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">ACADEMICS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-timetable.html">My Timetable</a><a href="faculty-marks.html">Internal Marks</a><a href="faculty-assignments.html">Assignments</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">STUDENTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-students.html">Student Monitoring</a><a href="faculty-leave-approvals.html">Leave Approvals</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">INSIGHTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-analytics.html">Analytics</a><a href="faculty-srms.html">SRMS Requests</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">PERSONAL<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-profile.html">My Profile</a><a href="faculty-leave.html">Apply Leave</a><a href="faculty-docs.html" class="active">Document Verify</a></div></div>
+  </aside>
+
+  <main class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h2 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;display:flex;align-items:center;gap:10px">
+        <i class="fa-solid fa-stamp" style="color:#e5383b"></i> Document Verification
+      </h2>
+      <a href="faculty-dashboard.html" style="color:#8892b0;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom:18px">
+      <div class="stat-card"><div class="stat-lbl">Total Submitted</div><div class="stat-val">5</div></div>
+      <div class="stat-card"><div class="stat-lbl">Pending Review</div><div class="stat-val" id="sc-pend" style="color:#fcd34d">3</div></div>
+      <div class="stat-card"><div class="stat-lbl">Verified</div><div class="stat-val" id="sc-done" style="color:#86efac">2</div></div>
+    </div>
+
+    <div class="grid2">
+      <!-- Document queue -->
+      <div class="card">
+        <div class="card-hd">
+          <h3><i class="fa-solid fa-inbox" style="color:#fca5a5"></i> Pending Verification Queue</h3>
+          <span style="font-size:11px;color:#8892b0" id="qCount">3 documents</span>
+        </div>
+        <div class="card-bd" id="docList"></div>
+      </div>
+
+      <!-- Verified docs -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-circle-check" style="color:#fca5a5"></i> Verified Documents</h3></div>
+        <div class="card-bd" id="verifiedList"></div>
+      </div>
+    </div>
+
+    <!-- Info card -->
+    <div class="card">
+      <div class="card-hd"><h3><i class="fa-solid fa-circle-info" style="color:#fca5a5"></i> Verification Guidelines</h3></div>
+      <div class="card-bd">
+        <div class="grid3">
+          <div style="padding:14px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:12px">
+            <div style="font-size:12px;font-weight:800;color:#86efac;margin-bottom:6px"><i class="fa-solid fa-check-circle" style="margin-right:5px"></i>Verify if valid</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.6">Document is clear, matches student records, all details are legible and correct, no tampering visible.</div>
+          </div>
+          <div style="padding:14px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:12px">
+            <div style="font-size:12px;font-weight:800;color:#fca5a5;margin-bottom:6px"><i class="fa-solid fa-times-circle" style="margin-right:5px"></i>Reject if invalid</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.6">Blurry image, mismatched details, expired document, or suspected forgery. Student must resubmit.</div>
+          </div>
+          <div style="padding:14px;background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.2);border-radius:12px">
+            <div style="font-size:12px;font-weight:800;color:#7dd3fc;margin-bottom:6px"><i class="fa-solid fa-question-circle" style="margin-right:5px"></i>Request Clarification</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.6">When document is partially unclear or additional supporting documents are needed from the student.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-wrap"></div>
+
+<script src="faculty-shared.js"></script>
+<script>
+const DOCS=[
+  {id:"DOC-301",student:"Arjun Sharma",roll:"MCA201",type:"Marksheet",desc:"12th Board Marksheet (CBSE)",status:"pending",icon:"fa-solid fa-file-lines",iconBg:"rgba(167,139,250,.15)",iconClr:"#c4b5fd",submitted:"Apr 5, 2026"},
+  {id:"DOC-302",student:"Sneha Gupta",roll:"MCA122",type:"Aadhar Card",desc:"Government ID Verification",status:"pending",icon:"fa-solid fa-id-card",iconBg:"rgba(56,189,248,.15)",iconClr:"#7dd3fc",submitted:"Apr 4, 2026"},
+  {id:"DOC-303",student:"Vikram Singh",roll:"MCA115",type:"Migration Certificate",desc:"From previous university",status:"pending",icon:"fa-solid fa-file-export",iconBg:"rgba(245,158,11,.15)",iconClr:"#fcd34d",submitted:"Apr 3, 2026"},
+  {id:"DOC-304",student:"Priya Patel",roll:"MCA107",type:"Medical Certificate",desc:"Leave verification document",status:"verified",icon:"fa-solid fa-notes-medical",iconBg:"rgba(34,197,94,.15)",iconClr:"#86efac",submitted:"Apr 1, 2026"},
+  {id:"DOC-305",student:"Rohit Kumar",roll:"MCA103",type:"Domicile Certificate",desc:"State domicile verification",status:"verified",icon:"fa-solid fa-map-pin",iconBg:"rgba(229,56,59,.15)",iconClr:"#fca5a5",submitted:"Mar 30, 2026"},
+];
+
+document.addEventListener("DOMContentLoaded",async()=>{
+  await requireAuth(["faculty","hod"]);
+  render();
+});
+
+function render(){
+  const pending=DOCS.filter(d=>d.status==="pending");
+  const verified=DOCS.filter(d=>d.status==="verified");
+  document.getElementById("sc-pend").textContent=pending.length;
+  document.getElementById("sc-done").textContent=verified.length;
+  document.getElementById("qCount").textContent=pending.length+" documents";
+
+  document.getElementById("docList").innerHTML=pending.map(d=>`
+  <div class="doc-card unverified" id="dc-${d.id}">
+    <div class="doc-icon" style="background:${d.iconBg}"><i class="${d.icon}" style="color:${d.iconClr}"></i></div>
+    <div style="flex:1;min-width:0">
+      <div class="doc-name">${d.type}</div>
+      <div class="doc-meta"><i class="fa-solid fa-user" style="margin-right:4px;opacity:.5"></i>${d.student} · ${d.roll}</div>
+      <div class="doc-meta">${d.desc} · Submitted ${d.submitted}</div>
+      <div class="doc-preview">
+        <i class="fa-solid fa-file-image" style="font-size:20px;color:#8892b0"></i>
+        <span>Document scan preview — <span style="color:#fca5a5;font-weight:700">click to review</span></span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;align-self:flex-start;margin-top:4px">
+      <button class="btn btn-sm btn-green" onclick="verifyDoc('${d.id}')"><i class="fa-solid fa-check"></i> Verify</button>
+      <button class="btn btn-sm btn-red" onclick="rejectDoc('${d.id}')"><i class="fa-solid fa-xmark"></i> Reject</button>
+      <button class="btn btn-sm btn-outline" onclick="showToast('Clarification request sent','info')"><i class="fa-regular fa-comment"></i></button>
+    </div>
+  </div>`).join("")||`<div style="text-align:center;padding:32px;color:#86efac"><i class="fa-solid fa-inbox" style="font-size:28px;display:block;margin-bottom:10px;opacity:.5"></i>Queue is clear!</div>`;
+
+  document.getElementById("verifiedList").innerHTML=verified.map(d=>`
+  <div class="doc-card verified">
+    <div class="doc-icon" style="background:${d.iconBg}"><i class="${d.icon}" style="color:${d.iconClr}"></i></div>
+    <div style="flex:1;min-width:0">
+      <div class="doc-name">${d.type}</div>
+      <div class="doc-meta">${d.student} · ${d.roll}</div>
+      <div class="doc-meta">${d.desc}</div>
+    </div>
+    <span class="badge b-green"><i class="fa-solid fa-shield-check" style="margin-right:4px"></i>Verified</span>
+  </div>`).join("")||`<div style="text-align:center;padding:32px;color:#8892b0"><i class="fa-solid fa-folder-open" style="font-size:28px;display:block;margin-bottom:10px;opacity:.3"></i>No verified documents</div>`;
+}
+
+function verifyDoc(id){
+  const d=DOCS.find(x=>x.id===id);if(!d)return;
+  d.status="verified";render();showToast(`${d.type} verified for ${d.student}`);
+}
+function rejectDoc(id){
+  const d=DOCS.find(x=>x.id===id);if(!d)return;
+  DOCS.splice(DOCS.indexOf(d),1);render();showToast(`Document rejected — student notified`,"info");
+}
+</script>
+</body>
+</html>
