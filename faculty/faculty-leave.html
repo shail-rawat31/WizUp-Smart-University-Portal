@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Apply Leave – WizUP Faculty</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="faculty-shared.css"/>
+<style>
+.leave-type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+.lt-card{padding:16px;border:2px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(0,0,0,.25);cursor:pointer;text-align:center;transition:.25s;user-select:none}
+.lt-card:hover{transform:translateY(-3px);border-color:rgba(34,197,94,.35)}
+.lt-card.active{border-color:#16a34a;background:rgba(34,197,94,.12)}
+.lt-card i{font-size:24px;margin-bottom:8px;display:block}
+.lt-card .lt-name{font-family:'Outfit',sans-serif;font-size:13px;font-weight:800}
+.lt-card .lt-days{font-size:10px;color:#8892b0;margin-top:3px}
+.hist-row{display:flex;align-items:flex-start;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.06);gap:12px}
+.hist-row:last-child{border-bottom:none}
+.hist-type{font-size:13px;font-weight:700;margin-bottom:3px}
+.hist-dates{font-size:11px;color:#8892b0}
+.hist-reason{font-size:12px;color:rgba(255,255,255,.55);margin-top:3px}
+.medical-note{padding:14px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:12px;font-size:12px;color:#fcd34d;display:none;margin-bottom:14px;line-height:1.6}
+.medical-note.show{display:flex;align-items:flex-start;gap:10px}
+.upload-zone{border:2px dashed rgba(34,197,94,.3);border-radius:12px;padding:22px;text-align:center;cursor:pointer;transition:.25s;background:rgba(34,197,94,.03)}
+.upload-zone:hover{border-color:rgba(34,197,94,.6);background:rgba(34,197,94,.07)}
+.upload-zone i{font-size:28px;color:#86efac;display:block;margin-bottom:8px}
+</style>
+</head>
+<body>
+<header class="header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo"/>
+  <div class="h-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Search…"/></div>
+  <div class="h-actions">
+    <div id="clock" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;color:#22c55e;margin-right:6px">00:00</div>
+    <a href="faculty-dashboard.html" class="h-btn"><i class="fa-solid fa-house"></i></a>
+    <div class="user-profile"><div class="up-avatar" id="uAvatar">F</div><div class="up-info"><span class="up-name" id="uName">Faculty</span><span class="up-role">Faculty Hub</span></div></div>
+    <button class="h-btn" onclick="doSignOut()"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+<div class="main-container">
+  <aside class="sidebar">
+    <div class="sidebar-section open"><div class="sidebar-header">ATTENDANCE<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-attendance.html">Mark Attendance</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">ACADEMICS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-timetable.html">My Timetable</a><a href="faculty-marks.html">Internal Marks</a><a href="faculty-assignments.html">Assignments</a><a href="faculty-subjects.html">Courses Assigned</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">STUDENTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-students.html">Student Monitoring</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">INSIGHTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-analytics.html">Analytics</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">PERSONAL<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-profile.html">My Profile</a><a href="faculty-leave.html">Apply Leave</a><a href="faculty-notifications.html">Notifications</a></div></div>
+  </aside>
+  <main class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h2 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;display:flex;align-items:center;gap:10px"><i class="fa-solid fa-suitcase-rolling" style="color:#16a34a"></i> My Leave Application</h2>
+      <a href="faculty-dashboard.html" style="color:#8892b0;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <!-- Leave Balance -->
+    <div class="stats-grid" style="margin-bottom:18px">
+      <div class="stat-card">
+        <div class="stat-lbl"><i class="fa-solid fa-calendar" style="color:#86efac"></i> Casual Leave</div>
+        <div class="stat-val" id="sc-casual">12</div>
+        <div class="stat-sub">Total entitlement</div>
+        <div class="stat-bar"><div class="stat-bar-fill" id="bar-casual" style="width:0%;background:#16a34a"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl"><i class="fa-solid fa-heart-pulse" style="color:#fca5a5"></i> Medical Leave</div>
+        <div class="stat-val" id="sc-medical">15</div>
+        <div class="stat-sub">Total entitlement</div>
+        <div class="stat-bar"><div class="stat-bar-fill" id="bar-medical" style="width:0%;background:#ef4444"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl"><i class="fa-solid fa-briefcase" style="color:#7dd3fc"></i> Duty Leave</div>
+        <div class="stat-val" id="sc-duty">10</div>
+        <div class="stat-sub">Total entitlement</div>
+        <div class="stat-bar"><div class="stat-bar-fill" id="bar-duty" style="width:0%;background:#38bdf8"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl"><i class="fa-solid fa-clock" style="color:#fcd34d"></i> Pending</div>
+        <div class="stat-val" id="sc-pend" style="color:#fcd34d">0</div>
+        <div class="stat-sub">Awaiting HOD approval</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <!-- Application form -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-pen-to-square" style="color:#86efac"></i> Submit Leave Request</h3></div>
+        <div class="card-bd">
+
+          <!-- Leave type selector -->
+          <div style="font-size:11px;color:#8892b0;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Leave Type</div>
+          <div class="leave-type-grid">
+            <div class="lt-card active" id="lt-casual" onclick="selectType('casual')">
+              <i class="fa-solid fa-umbrella-beach" style="color:#86efac"></i>
+              <div class="lt-name" style="color:#86efac">Casual</div>
+              <div class="lt-days">Max 12 days/year</div>
+            </div>
+            <div class="lt-card" id="lt-medical" onclick="selectType('medical')">
+              <i class="fa-solid fa-kit-medical" style="color:#fca5a5"></i>
+              <div class="lt-name" style="color:#fca5a5">Medical</div>
+              <div class="lt-days">Max 15 days/year</div>
+            </div>
+            <div class="lt-card" id="lt-duty" onclick="selectType('duty')">
+              <i class="fa-solid fa-briefcase" style="color:#7dd3fc"></i>
+              <div class="lt-name" style="color:#7dd3fc">Duty</div>
+              <div class="lt-days">Official travel</div>
+            </div>
+          </div>
+
+          <!-- Medical certificate note -->
+          <div class="medical-note" id="medNote">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size:16px;flex-shrink:0;margin-top:1px"></i>
+            <div>Medical leave requires a <strong>doctor's certificate</strong> within 3 days of return. Ensure you have it before applying.</div>
+          </div>
+
+          <!-- Date range -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group"><label>From Date</label><input type="date" id="fromDate" onchange="calcDays()"/></div>
+            <div class="form-group"><label>To Date</label><input type="date" id="toDate" onchange="calcDays()"/></div>
+          </div>
+
+          <!-- Days preview -->
+          <div id="daysPreview" style="display:none;padding:10px 14px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;font-size:13px;color:#86efac;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+            <i class="fa-solid fa-calendar-days"></i>
+            <span id="daysCount">0 day(s) selected</span>
+          </div>
+
+          <div class="form-group">
+            <label>Substitute Arrangement</label>
+            <input type="text" id="substitute" placeholder="e.g. Dr. Sharma will cover Monday's class"/>
+          </div>
+
+          <div class="form-group">
+            <label>Reason <span style="color:#fca5a5">*</span></label>
+            <textarea id="leaveReason" rows="3" placeholder="Briefly describe the reason for leave…"></textarea>
+          </div>
+
+          <!-- Medical doc upload (only for medical) -->
+          <div id="docUploadSection" style="display:none;margin-bottom:14px">
+            <div style="font-size:11px;color:#8892b0;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Medical Certificate (Optional)</div>
+            <div class="upload-zone" onclick="document.getElementById('medDoc').click()">
+              <i class="fa-solid fa-file-medical"></i>
+              <div style="font-size:13px;font-weight:600;color:#86efac;margin-bottom:4px">Click to attach certificate</div>
+              <div style="font-size:11px;color:#8892b0">PDF or image · Max 5MB</div>
+              <input type="file" id="medDoc" accept=".pdf,image/*" style="display:none" onchange="showFileName(this)"/>
+            </div>
+            <div id="fileNameDisplay" style="font-size:12px;color:#86efac;margin-top:8px;display:none"></div>
+          </div>
+
+          <div style="padding:12px 14px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;font-size:12px;color:#86efac;margin-bottom:14px">
+            <i class="fa-solid fa-circle-info" style="margin-right:6px"></i>
+            All leave requests require <strong>HOD approval</strong>. You will receive a notification upon decision.
+          </div>
+
+          <button class="btn btn-brand" id="submitBtn" style="width:100%;justify-content:center;padding:13px" onclick="submitLeave()">
+            <i class="fa-solid fa-paper-plane"></i> Submit to HOD
+          </button>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="card">
+        <div class="card-hd">
+          <h3><i class="fa-solid fa-clock-rotate-left" style="color:#86efac"></i> Leave History</h3>
+          <span id="histCount" style="font-size:11px;color:#8892b0"></span>
+        </div>
+        <div class="card-bd" id="leaveHistory">
+          <div style="text-align:center;padding:30px;color:#8892b0"><i class="fa-solid fa-spinner fa-spin" style="font-size:22px"></i></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-wrap"></div>
+<script src="faculty-shared.js"></script>
+<script>
+var selectedType = "casual";
+var currentUser = null;
+
+var LEAVE_MAX = {casual:12, medical:15, duty:10};
+var LEAVE_COLORS = {casual:"#86efac", medical:"#fca5a5", duty:"#7dd3fc"};
+var LEAVE_BG = {casual:"rgba(34,197,94,.15)", medical:"rgba(239,68,68,.15)", duty:"rgba(56,189,248,.15)"};
+var LEAVE_BADGE = {casual:"b-green", medical:"b-red", duty:"b-blue"};
+
+document.addEventListener("DOMContentLoaded", async function(){
+  var prof = await requireAuth(["faculty","hod"]);
+  if(!prof) return;
+  currentUser = prof;
+
+  // Set default dates
+  var today = new Date().toISOString().split("T")[0];
+  document.getElementById("fromDate").value = today;
+  document.getElementById("toDate").value = today;
+  calcDays();
+
+  await loadHistory();
+});
+
+function selectType(type){
+  selectedType = type;
+  ["casual","medical","duty"].forEach(function(t){
+    document.getElementById("lt-"+t).classList.toggle("active", t===type);
+  });
+  var medNote = document.getElementById("medNote");
+  var docSection = document.getElementById("docUploadSection");
+  medNote.classList.toggle("show", type==="medical");
+  docSection.style.display = type==="medical" ? "block" : "none";
+}
+
+function calcDays(){
+  var from = document.getElementById("fromDate").value;
+  var to = document.getElementById("toDate").value;
+  if(!from||!to) return;
+  var d = Math.ceil((new Date(to)-new Date(from))/86400000)+1;
+  if(d<1) d=1;
+  var preview = document.getElementById("daysPreview");
+  var count = document.getElementById("daysCount");
+  preview.style.display = "flex";
+  count.textContent = d + (d===1?" day":" days") + " selected";
+}
+
+function showFileName(input){
+  if(input.files[0]){
+    var el = document.getElementById("fileNameDisplay");
+    el.style.display="block";
+    el.innerHTML = '<i class="fa-solid fa-file-check" style="margin-right:6px"></i>'+input.files[0].name;
+  }
+}
+
+async function loadHistory(){
+  if(!currentUser) return;
+  var el = document.getElementById("leaveHistory");
+  var res = await db.from("leave_requests")
+    .select("*")
+    .eq("requested_by", currentUser.id)
+    .order("created_at", {ascending:false})
+    .limit(20);
+
+  var data = res.data || [];
+
+  // Count by status and update balance stats
+  var used = {casual:0, medical:0, duty:0};
+  var pending = 0;
+  data.forEach(function(l){
+    var t = l.type.toLowerCase();
+    if(l.status==="approved" && used[t]!==undefined) used[t] += (l.days_count||1);
+    if(l.status==="pending") pending++;
+  });
+  document.getElementById("sc-pend").textContent = pending;
+
+  // Update bars
+  ["casual","medical","duty"].forEach(function(t){
+    var max = LEAVE_MAX[t];
+    var u = used[t]||0;
+    document.getElementById("sc-"+t).textContent = max - u;
+    document.getElementById("bar-"+t).style.width = Math.min(100, Math.round(u/max*100))+"%";
+  });
+  document.getElementById("histCount").textContent = data.length + " record" + (data.length===1?"":"s");
+
+  if(!data.length){
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:#8892b0"><i class="fa-solid fa-calendar-xmark" style="font-size:28px;display:block;margin-bottom:12px;opacity:.4"></i>No leave history this semester</div>';
+    return;
+  }
+
+  el.innerHTML = data.map(function(l){
+    var t = l.type.toLowerCase();
+    var badge = LEAVE_BADGE[t] || "b-amber";
+    var statusBadge = l.status==="approved"?"b-green":l.status==="rejected"?"b-red":"b-amber";
+    var fileLink = l.file_url
+      ? '<a href="'+l.file_url+'" target="_blank" style="font-size:10px;color:#86efac;display:inline-flex;align-items:center;gap:4px;margin-top:4px;text-decoration:none"><i class="fa-solid fa-file-medical"></i> View Certificate</a>'
+      : (l.medical_required ? '<div style="font-size:10px;color:#fcd34d;margin-top:4px"><i class="fa-solid fa-triangle-exclamation" style="margin-right:4px"></i>Certificate required</div>' : '');
+    return '<div class="hist-row">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div class="hist-type"><span class="badge '+badge+'" style="margin-right:8px;font-size:10px">'+l.type+'</span>'+(l.days_count||1)+' day'+(l.days_count>1?"s":"")+"</div>"
+      +'<div class="hist-dates"><i class="fa-regular fa-calendar" style="margin-right:5px"></i>'+fmtDate(l.start_date)+' → '+fmtDate(l.end_date)+'</div>'
+      +'<div class="hist-reason">'+l.reason+'</div>'
+      +fileLink
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
+      +'<span class="badge '+statusBadge+'">'+l.status+'</span>'
+      +(l.status==="pending"?'<button class="btn btn-sm btn-red" onclick="cancelLeave(\''+l.id+'\')">' +
+        '<i class="fa-solid fa-xmark"></i> Cancel</button>':'')
+      +'</div>'
+      +'</div>';
+  }).join("");
+}
+
+async function cancelLeave(id){
+  if(!confirm("Cancel this leave request?")) return;
+  var res = await db.from("leave_requests").delete().eq("id", id).eq("requested_by", currentUser.id);
+  if(res.error){ showToast("Failed: "+res.error.message, "error"); return; }
+  showToast("Leave request cancelled", "info");
+  loadHistory();
+}
+
+async function submitLeave(){
+  var from = document.getElementById("fromDate").value;
+  var to = document.getElementById("toDate").value;
+  var reason = document.getElementById("leaveReason").value.trim();
+  if(!reason){ showToast("Please enter a reason", "error"); return; }
+  if(!from||!to){ showToast("Select dates", "error"); return; }
+  if(new Date(to)<new Date(from)){ showToast("To date must be after from date", "error"); return; }
+
+  var days = Math.ceil((new Date(to)-new Date(from))/86400000)+1;
+
+  // Validate leave balance
+  var balStat = document.getElementById("sc-"+selectedType);
+  var remaining = parseInt(balStat.textContent)||0;
+  if(days > remaining){
+    showToast("Insufficient "+selectedType+" leave balance ("+remaining+" days left)", "error");
+    return;
+  }
+
+  var btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+
+  // — Upload medical certificate if provided —
+  var fileUrl  = null;
+  var fileName = null;
+  var fileInput = document.getElementById("medDoc");
+  if(selectedType === "medical"){
+    if(!fileInput.files[0]){
+      showToast("Medical leave requires a certificate. Please attach one.", "error");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit to HOD';
+      return;
+    }
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading certificate…';
+    var file = fileInput.files[0];
+    var ext  = file.name.split('.').pop();
+    var safeName = Date.now() + '_' + currentUser.id.slice(0,8) + '.' + ext;
+    var fPath = 'leave-docs/' + safeName;
+    var upRes = await db.storage.from("uploads").upload(fPath, file, {upsert:true, contentType: file.type});
+    if(upRes.error){
+      showToast("Certificate upload failed: " + upRes.error.message + " — run sql/fix_leave_attachments.sql in Supabase first.", "error");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit to HOD';
+      return;   // ← hard stop
+    }
+    var pub = db.storage.from("uploads").getPublicUrl(fPath);
+    fileUrl  = pub.data.publicUrl;
+    fileName = file.name;
+  }
+
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting…';
+
+  var payload = {
+    requested_by:     currentUser.id,
+    type:             selectedType,
+    start_date:       from,
+    end_date:         to,
+    reason:           reason,
+    medical_required: selectedType === "medical",
+    file_url:         fileUrl,
+    file_name:        fileName,
+    status:           "pending"
+  };
+
+  var res = await db.from("leave_requests").insert(payload);
+
+  if(res.error){
+    showToast("Submission failed: "+res.error.message, "error");
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit to HOD';
+    return;
+  }
+
+  showToast("Leave request submitted to HOD successfully!", "success");
+
+  // Reset form
+  document.getElementById("leaveReason").value = "";
+  document.getElementById("substitute").value = "";
+  document.getElementById("medDoc").value = "";
+  document.getElementById("fileNameDisplay").style.display = "none";
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit to HOD';
+
+  await loadHistory();
+}
+</script>
+</body>
+</html>

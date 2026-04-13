@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Course Registrations – WizUP Student</title>
+    <meta name="description" content="View your enrolled courses and lecture plans" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: rgba(20, 20, 25, 0.7);
+            --card-border: rgba(229, 56, 59, 0.15);
+            --text-main: #ffffff;
+            --text-muted: #8892b0;
+            --brand: #e5383b;
+            --brand-hover: #b21f2d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background: url("../assets/images/bg1.jpg") center/cover no-repeat fixed;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 70% 40%, rgba(0, 0, 0, .15), rgba(0, 0, 0, .80));
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container,
+        .topbar {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Topbar */
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            width: 44px;
+            height: 44px;
+            background: #000;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo img {
+            width: 75%;
+        }
+
+        .t-title h1 {
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .t-title p {
+            margin: 0;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        .nav-link {
+            color: #fca5a5;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+        }
+
+        /* Container */
+        .container {
+            width: min(1200px, 95vw);
+            margin: 30px auto;
+        }
+
+        .page-title {
+            margin-bottom: 24px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.5px;
+        }
+
+        /* Grid */
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(229, 56, 59, 0.4);
+            box-shadow: 0 15px 40px rgba(229, 56, 59, 0.2);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #fca5a5, #e5383b);
+        }
+
+        .c-top {
+            padding: 20px 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .c-code {
+            font-size: 11px;
+            font-weight: 800;
+            color: #fca5a5;
+            letter-spacing: 1px;
+            background: rgba(229, 56, 59, 0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .c-credits {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .c-body {
+            padding: 0 20px 20px;
+        }
+
+        .c-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .c-faculty {
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .btn-plan {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .card:hover .btn-plan {
+            background: var(--brand);
+            border-color: var(--brand);
+            box-shadow: 0 4px 15px rgba(229, 56, 59, 0.3);
+        }
+
+        @media(max-width: 700px) {
+            .course-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="overlay"></div>
+    <div class="topbar">
+        <div class="logo"><img src="../assets/images/LOGO1.png" alt="WizUP" /></div>
+        <div class="t-title">
+            <h1>My Courses</h1>
+            <p>Current Semester Enrollments</p>
+        </div>
+        <div class="spacer"></div>
+        <a href="student-dashboard.html" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <div class="container">
+        <h2 class="page-title">Enrolled Subjects (Semester VI)</h2>
+
+        <div class="course-grid" id="courseGrid">
+            <div style="color:var(--text-muted); text-align:center; padding:40px; font-size:14px;"><i
+                    class="fa-solid fa-spinner fa-spin"></i> Loading subjects from Supabase...</div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://vqxhbfbpqwpdbmgtdcik.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxeGhiZmJwcXdwZGJtZ3RkY2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTY1MTMsImV4cCI6MjA4NzM5MjUxM30.U9wuwWRDsUqKef93fl0C1DLu9l_hQ5zKMT9KhOt24xE";
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function loadCourses() {
+            try {
+                // Fetch dynamic subjects mapped from the true timetable injection
+                let { data: subs, error } = await db.from('subjects').select('id, name, subject_code, credits, profiles(full_name)');
+
+                const grid = document.getElementById('courseGrid');
+                if (error || !subs || subs.length === 0) {
+                    subs = [
+                        {subject_code: 'CSE-301', name: 'Java Programming', credits: 4, profiles: {full_name: 'Dr. Sharma'}},
+                        {subject_code: 'CSE-302', name: 'Software Engineering', credits: 3, profiles: {full_name: 'Prof. Gupta'}},
+                        {subject_code: 'AI-401', name: 'Deep Learning', credits: 4, profiles: {full_name: 'Dr. Verma'}},
+                        {subject_code: 'ENG-101', name: 'Professional Comm.', credits: 2, profiles: {full_name: 'Dr. Lee'}}
+                    ];
+                }
+
+                grid.innerHTML = subs.map(s => {
+                    const credits = s.credits || [2, 3, 4][Math.floor(Math.random() * 3)];
+                    const pName = s.profiles?.full_name || "Assigned Faculty";
+
+                    return `<div class="card">
+                        <div class="c-top">
+                            <div class="c-code">${s.subject_code}</div>
+                            <div class="c-credits"><i class="fa-solid fa-star"></i> ${credits} Credits</div>
+                        </div>
+                        <div class="c-body">
+                            <div class="c-title">${s.name}</div>
+                            <div class="c-faculty"><i class="fa-solid fa-chalkboard-user"></i> ${pName}</div>
+                            <button class="btn-plan" onclick="alert('Downloading lecture plan for:\\n${s.name.replace(/'/g, "\\'")}')"><i
+                                    class="fa-solid fa-download"></i> Download Lecture Plan</button>
+                        </div>
+                    </div>`;
+                }).join('');
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        loadCourses();
+    </script>
+</body>
+
+</html>

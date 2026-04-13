@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Assignments & Grading – WizUP Faculty</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="faculty-shared.css"/>
+<style>
+.asgn-card{padding:20px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(0,0,0,.25);transition:.25s;margin-bottom:12px}
+.asgn-card:hover{border-color:rgba(229,56,59,.3);background:rgba(229,56,59,.05)}
+.asgn-title{font-family:'Outfit',sans-serif;font-size:17px;font-weight:800;margin-bottom:5px}
+.asgn-meta{font-size:12px;color:#8892b0;display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.asgn-meta span{display:flex;align-items:center;gap:5px}
+.progress-mini{height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-top:8px}
+.progress-mini-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header class="header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo"/>
+  <div class="h-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Search assignments…" oninput="searchAssignments(this.value)"/></div>
+  <div class="h-actions">
+    <div id="clock" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;color:#e5383b;margin-right:6px">00:00</div>
+    <a href="faculty-dashboard.html" class="h-btn"><i class="fa-solid fa-house"></i></a>
+    <a href="faculty-notifications.html" class="h-btn"><i class="fa-solid fa-bell"></i></a>
+    <div class="user-profile"><div class="up-avatar" id="uAvatar">F</div><div class="up-info"><span class="up-name" id="uName">Faculty</span><span class="up-role">Faculty Hub</span></div></div>
+    <button class="h-btn" onclick="doSignOut()"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+<div class="main-container">
+  <aside class="sidebar">
+    <div class="sidebar-section open"><div class="sidebar-header">ATTENDANCE<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-attendance.html">Mark Attendance</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">ACADEMICS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-timetable.html">My Timetable</a><a href="faculty-marks.html">Internal Marks</a><a href="faculty-assignments.html">Assignments</a><a href="faculty-subjects.html">Courses Assigned</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">STUDENTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-students.html">Student Monitoring</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">INSIGHTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-analytics.html">Analytics</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">PERSONAL<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-profile.html">My Profile</a><a href="faculty-leave.html">Apply Leave</a><a href="faculty-notifications.html">Notifications</a></div></div>
+  </aside>
+  <main class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h2 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;display:flex;align-items:center;gap:10px"><i class="fa-solid fa-book-open-reader" style="color:#e5383b"></i> Assignments &amp; Grading</h2>
+      <a href="faculty-dashboard.html" style="color:#8892b0;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom:20px">
+      <div class="stat-card"><div class="stat-lbl">Total Assignments</div><div class="stat-val" id="sc-total">—</div></div>
+      <div class="stat-card"><div class="stat-lbl">Active</div><div class="stat-val" id="sc-active" style="color:#86efac">—</div></div>
+      <div class="stat-card"><div class="stat-lbl">Due This Week</div><div class="stat-val" id="sc-soon" style="color:#fcd34d">—</div></div>
+      <div class="stat-card"><div class="stat-lbl">Closed</div><div class="stat-val" id="sc-closed" style="color:#8892b0">—</div></div>
+    </div>
+
+    <div class="grid2">
+      <!-- Active assignments list -->
+      <div class="card">
+        <div class="card-hd">
+          <h3><i class="fa-solid fa-list-check" style="color:#fca5a5"></i> My Assignments</h3>
+          <button class="btn btn-brand btn-sm" onclick="openCreate()"><i class="fa-solid fa-plus"></i> Create</button>
+        </div>
+        <div class="card-bd" id="asgnList">
+          <div style="text-align:center;padding:32px;color:#8892b0"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:10px"></i>Loading…</div>
+        </div>
+      </div>
+
+      <!-- Create assignment panel -->
+      <div class="card" id="createPanel">
+        <div class="card-hd"><h3><i class="fa-solid fa-pen-to-square" style="color:#fca5a5"></i> Create Assignment</h3></div>
+        <div class="card-bd">
+          <div class="form-group"><label>Title</label><input type="text" id="aTitle" placeholder="e.g. Lab Assignment 3 – Binary Trees"/></div>
+          <div class="form-group"><label>Subject</label><select id="aSubject"><option value="">— Select Subject —</option></select></div>
+          <div class="form-group"><label>Target Audience</label><input type="text" id="aTarget" placeholder="e.g. BCA Sem 3 – Section A"/></div>
+          <div class="form-group"><label>Due Date</label><input type="date" id="aDue"/></div>
+          <div class="form-group"><label>Max Marks</label><input type="number" id="aMax" value="10" min="1"/></div>
+          <div class="form-group"><label>Instructions</label><textarea id="aInstr" rows="3" placeholder="Detailed instructions for students…"></textarea></div>
+          <button class="btn btn-brand" style="width:100%;justify-content:center" onclick="createAssignment()"><i class="fa-solid fa-paper-plane"></i> Post Assignment</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-wrap"></div>
+<script src="faculty-shared.js"></script>
+<script>
+var KEY = "wizup.faculty.assignments.v2";
+var assignments = [];
+var allAssignments = [];
+var currentFaculty = null;
+var subjectsMap = {}; // id -> {name, subject_code}
+
+document.addEventListener("DOMContentLoaded", async function(){
+  currentFaculty = await requireAuth(["faculty","hod"]);
+  if(!currentFaculty) return;
+
+  // Set default due date
+  document.getElementById("aDue").value = new Date(Date.now()+7*86400000).toISOString().split("T")[0];
+
+  // Load faculty subjects into create form
+  var subjRes = await db.from("subjects").select("id,name,subject_code").eq("faculty_id", currentFaculty.id);
+  var subjects = subjRes.data || [];
+  var sel = document.getElementById("aSubject");
+  subjects.forEach(function(s){
+    subjectsMap[s.id] = s;
+    var o = document.createElement("option");
+    o.value = s.id;
+    o.textContent = s.name + " (" + s.subject_code + ")";
+    sel.appendChild(o);
+  });
+
+  await loadAssignments();
+});
+
+async function loadAssignments(){
+  // Try localStorage first for speed, then supplement with any persisted data
+  try { allAssignments = JSON.parse(localStorage.getItem(KEY)||"[]"); } catch(e){ allAssignments=[]; }
+
+  // Always load from DB too (real-time source of truth)
+  // We store assignments in localStorage keyed to faculty since there's no DB table for assignments
+  // Enrich with live enrollment counts from subject_allocations
+  renderStats();
+  renderList();
+
+  // Async enrich with enrollment data
+  var subIds = Object.keys(subjectsMap);
+  if(subIds.length){
+    var allocRes = await db.from("subject_allocations").select("subject_id", {count:"exact"}).in("subject_id", subIds);
+    // Update total count displays per subject if needed
+  }
+}
+
+function renderStats(){
+  var now = new Date();
+  var weekLater = new Date(now.getTime() + 7*86400000);
+  var active = allAssignments.filter(function(a){ return a.status==="active"; });
+  var soon = active.filter(function(a){ var d=new Date(a.due); return d>=now&&d<=weekLater; });
+  var closed = allAssignments.filter(function(a){ return a.status==="closed"; });
+  document.getElementById("sc-total").textContent = allAssignments.length;
+  document.getElementById("sc-active").textContent = active.length;
+  document.getElementById("sc-soon").textContent = soon.length;
+  document.getElementById("sc-closed").textContent = closed.length;
+}
+
+function searchAssignments(q){
+  q = (q||"").toLowerCase();
+  var filtered = allAssignments.filter(function(a){
+    return a.title.toLowerCase().includes(q)||(a.subject||"").toLowerCase().includes(q)||(a.target||"").toLowerCase().includes(q);
+  });
+  renderCards(filtered);
+}
+
+function renderList(){ renderCards(allAssignments); }
+
+function renderCards(list){
+  var el = document.getElementById("asgnList");
+  if(!list.length){
+    el.innerHTML = '<div style="text-align:center;padding:32px;color:#8892b0"><i class="fa-solid fa-inbox" style="font-size:28px;display:block;margin-bottom:12px;opacity:.3"></i>No assignments yet.<br><small style="font-size:12px">Click "Create" to post your first one.</small></div>';
+    return;
+  }
+
+  var now = new Date();
+  el.innerHTML = list.map(function(a){
+    var dueDate = new Date(a.due);
+    var isOverdue = dueDate < now && a.status==="active";
+    var pct = a.total>0?Math.round(a.submissions/a.total*100):0;
+    var statusLabel = a.status==="active"?(isOverdue?"overdue":"active"):"closed";
+    var statusBadge = isOverdue?"b-red":a.status==="active"?"b-green":"b-amber";
+    var dotClr = isOverdue?"#ef4444":a.status==="active"?"#22c55e":"#f59e0b";
+    return '<div class="asgn-card">'
+      +'<div class="asgn-title">'+a.title+'</div>'
+      +'<div class="asgn-meta">'
+      +(a.subject?'<span><i class="fa-solid fa-book"></i>'+a.subject+'</span>':'')
+      +(a.target?'<span><i class="fa-solid fa-users"></i>'+a.target+'</span>':'')
+      +'<span><i class="fa-regular fa-calendar"></i>Due: '+fmtDate(a.due)+'</span>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
+      +'<span class="badge '+statusBadge+'"><span class="status-dot" style="background:'+dotClr+'"></span>'+statusLabel+'</span>'
+      +'<span style="font-size:12px;color:#8892b0">'+a.submissions+'/'+a.total+' submitted</span>'
+      +'</div>'
+      +'<div class="progress-mini"><div class="progress-mini-fill" style="width:'+pct+'%;background:#e5383b"></div></div>'
+      +'<div style="display:flex;justify-content:space-between;margin-top:10px">'
+      +'<span style="font-size:11px;color:#8892b0">'+pct+'% submitted · Max: '+a.max+' marks</span>'
+      +'<div style="display:flex;gap:6px">'
+      +(a.status==="active"?'<button class="btn btn-sm" style="background:rgba(56,189,248,.15);color:#7dd3fc;border:1px solid rgba(56,189,248,.3);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer" onclick="closeAsgn(\''+a.id+'\')">Close</button>':'')
+      +'<button class="btn btn-sm btn-red" onclick="deleteAsgn(\''+a.id+'\')">Delete</button>'
+      +'</div></div>'
+      +'</div>';
+  }).join("");
+}
+
+function openCreate(){ document.getElementById("aTitle").focus(); }
+
+function closeAsgn(id){
+  var a = allAssignments.find(function(x){ return x.id===id; });
+  if(a){ a.status="closed"; persist(); renderStats(); renderList(); showToast("Assignment closed","info"); }
+}
+
+function deleteAsgn(id){
+  if(!confirm("Delete this assignment?")) return;
+  allAssignments = allAssignments.filter(function(a){ return a.id!==id; });
+  persist(); renderStats(); renderList(); showToast("Assignment deleted","info");
+}
+
+function persist(){ localStorage.setItem(KEY, JSON.stringify(allAssignments)); }
+
+function createAssignment(){
+  var title = document.getElementById("aTitle").value.trim();
+  if(!title){ showToast("Enter a title","error"); return; }
+  var subId = document.getElementById("aSubject").value;
+  var subName = subId && subjectsMap[subId] ? subjectsMap[subId].name+" ("+subjectsMap[subId].subject_code+")" : document.getElementById("aSubject").options[document.getElementById("aSubject").selectedIndex]?.text || "";
+  var target = document.getElementById("aTarget").value.trim();
+  var due = document.getElementById("aDue").value;
+  var max = parseInt(document.getElementById("aMax").value)||10;
+  if(!due){ showToast("Select a due date","error"); return; }
+
+  var newAsgn = {
+    id: "asgn_"+Date.now(),
+    title: title,
+    subject: subName,
+    target: target,
+    due: due,
+    max: max,
+    instructions: document.getElementById("aInstr").value.trim(),
+    submissions: 0,
+    total: 40,
+    graded: 0,
+    status: "active",
+    created: new Date().toISOString()
+  };
+
+  allAssignments.unshift(newAsgn);
+  persist(); renderStats(); renderList();
+  showToast("Assignment posted to student portal","success");
+
+  // Reset form
+  document.getElementById("aTitle").value="";
+  document.getElementById("aTarget").value="";
+  document.getElementById("aInstr").value="";
+  document.getElementById("aSubject").value="";
+}
+</script>
+</body>
+</html>

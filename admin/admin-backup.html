@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Backup & Data – WizUP Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-shared.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.backup-action{padding:20px;border:1px solid rgba(255,145,0,.18);border-radius:12px;background:rgba(10,10,15,.8);display:flex;align-items:center;gap:16px;transition:.2s;cursor:pointer}
+.backup-action:hover{border-color:rgba(255,145,0,.4);transform:translateY(-2px)}
+.ba-icon{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.ba-info h4{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
+.ba-info p{font-size:12px;color:#8892b0;line-height:1.4}
+.progress-bar{height:8px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:99px;transition:.8s ease}
+</style>
+</head>
+<body>
+<header class="adm-header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="adm-logo"/>
+  <div><div class="adm-title">Backup & Data</div><div class="adm-sub">Export, backup and manage system data</div></div>
+  <div class="adm-spacer"></div>
+  <div class="adm-header-btns">
+    <a href="admin-dashboard.html" class="ico-btn"><i class="fa-solid fa-house"></i></a>
+    <div class="user-chip"><div class="user-avatar" id="userAvatar">A</div><div><div class="user-name" id="userName">Admin</div><div class="user-role">Super Admin</div></div></div>
+    <button class="ico-btn danger" onclick="doSignOut()"><i class="fa-solid fa-power-off"></i></button>
+  </div>
+</header>
+<div class="adm-wrap">
+  <aside class="adm-sidebar" id="sidebar"></aside>
+  <main class="adm-content">
+    <div class="pg-head">
+      <div><h1 class="pg-title"><i class="fa-solid fa-database"></i>Backup & Data Management</h1><p class="pg-sub">Export data as JSON / CSV, view record counts, and manage system data</p></div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(255,145,0,.15);color:#ff9100"><i class="fa-solid fa-users"></i></div><div class="sc-val" id="cnt-users">—</div><div class="sc-lbl">Users</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(56,189,248,.15);color:#7dd3fc"><i class="fa-solid fa-calendar-check"></i></div><div class="sc-val" id="cnt-att">—</div><div class="sc-lbl">Attendance Records</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(34,197,94,.15);color:#86efac"><i class="fa-solid fa-file-lines"></i></div><div class="sc-val" id="cnt-marks">—</div><div class="sc-lbl">Marks Records</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(245,158,11,.15);color:#fcd34d"><i class="fa-solid fa-plane-slash"></i></div><div class="sc-val" id="cnt-leaves">—</div><div class="sc-lbl">Leave Requests</div></div>
+    </div>
+
+    <!-- Export Actions -->
+    <div class="card">
+      <div class="card-hd"><h3><i class="fa-solid fa-download"></i> Export Data</h3></div>
+      <div class="card-bd" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+        <div class="backup-action" onclick="exportData('users')">
+          <div class="ba-icon" style="background:rgba(255,145,0,.15);color:#ff9100"><i class="fa-solid fa-users"></i></div>
+          <div class="ba-info"><h4>Export All Users</h4><p>Download all profiles as JSON</p></div>
+          <i class="fa-solid fa-download" style="color:#ff9100;margin-left:auto;font-size:18px"></i>
+        </div>
+        <div class="backup-action" onclick="exportData('attendance')">
+          <div class="ba-icon" style="background:rgba(56,189,248,.15);color:#7dd3fc"><i class="fa-solid fa-calendar-check"></i></div>
+          <div class="ba-info"><h4>Export Attendance</h4><p>Full attendance log as JSON</p></div>
+          <i class="fa-solid fa-download" style="color:#7dd3fc;margin-left:auto;font-size:18px"></i>
+        </div>
+        <div class="backup-action" onclick="exportData('marks')">
+          <div class="ba-icon" style="background:rgba(34,197,94,.15);color:#86efac"><i class="fa-solid fa-file-lines"></i></div>
+          <div class="ba-info"><h4>Export Marks</h4><p>All marks records as JSON</p></div>
+          <i class="fa-solid fa-download" style="color:#86efac;margin-left:auto;font-size:18px"></i>
+        </div>
+        <div class="backup-action" onclick="exportData('leave_requests')">
+          <div class="ba-icon" style="background:rgba(245,158,11,.15);color:#fcd34d"><i class="fa-solid fa-plane-slash"></i></div>
+          <div class="ba-info"><h4>Export Leave Requests</h4><p>All leave records as JSON</p></div>
+          <i class="fa-solid fa-download" style="color:#fcd34d;margin-left:auto;font-size:18px"></i>
+        </div>
+        <div class="backup-action" onclick="exportData('subjects')">
+          <div class="ba-icon" style="background:rgba(167,139,250,.15);color:#c4b5fd"><i class="fa-solid fa-book"></i></div>
+          <div class="ba-info"><h4>Export Subjects</h4><p>All subjects and courses as JSON</p></div>
+          <i class="fa-solid fa-download" style="color:#c4b5fd;margin-left:auto;font-size:18px"></i>
+        </div>
+        <div class="backup-action" onclick="exportData('announcements')">
+          <div class="ba-icon" style="background:rgba(239,68,68,.15);color:#fca5a5"><i class="fa-solid fa-bullhorn"></i></div>
+          <div class="ba-info"><h4>Export Announcements</h4><p>All broadcasts as JSON</p></div>
+          <i class="fa-solid fa-download" style="color:#fca5a5;margin-left:auto;font-size:18px"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Database Health -->
+    <div class="card">
+      <div class="card-hd"><h3><i class="fa-solid fa-heart-pulse"></i> Database Health Overview</h3><button class="btn btn-ghost btn-sm" onclick="loadCounts()"><i class="fa-solid fa-rotate-right"></i></button></div>
+      <div class="card-bd" id="healthGrid" style="display:flex;flex-direction:column;gap:14px">
+        <div class="empty"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading…</p></div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toastWrap"></div>
+<script src="admin-shared.js"></script>
+<script>
+document.getElementById("sidebar").innerHTML = SIDEBAR_HTML;
+
+var TABLE_INFO=[
+  {key:"profiles",label:"Users / Profiles",color:"#ff9100",max:500},
+  {key:"attendance",label:"Attendance Records",color:"#7dd3fc",max:10000},
+  {key:"marks",label:"Marks Records",color:"#86efac",max:5000},
+  {key:"leave_requests",label:"Leave Requests",color:"#fcd34d",max:1000},
+  {key:"subjects",label:"Subjects",color:"#c4b5fd",max:200},
+  {key:"departments",label:"Departments",color:"#fb923c",max:20},
+  {key:"announcements",label:"Announcements",color:"#fca5a5",max:500},
+];
+
+window.onload = async function(){
+  var ok = await requireAdmin(); if(!ok) return;
+  initSidebar();
+  loadCounts();
+};
+
+async function loadCounts(){
+  var results = await Promise.all(TABLE_INFO.map(function(t){
+    return db.from(t.key).select("id",{count:"exact",head:true});
+  }));
+  var counts = results.map(function(r){ return r.count||0; });
+
+  document.getElementById("cnt-users").textContent  = counts[0];
+  document.getElementById("cnt-att").textContent    = counts[1];
+  document.getElementById("cnt-marks").textContent  = counts[2];
+  document.getElementById("cnt-leaves").textContent = counts[3];
+
+  document.getElementById("healthGrid").innerHTML = TABLE_INFO.map(function(t,i){
+    var cnt = counts[i];
+    var pct = Math.min(100,Math.round(cnt/t.max*100));
+    return '<div>'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+      +'<span style="font-size:13px;font-weight:600;color:#e2e8f0">'+t.label+'</span>'
+      +'<span style="font-size:12px;font-weight:700;color:'+t.color+'">'+cnt+' records</span>'
+      +'</div>'
+      +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%;background:'+t.color+'"></div></div>'
+      +'<div style="font-size:10px;color:#555;margin-top:4px">'+pct+'% of estimated capacity</div>'
+      +'</div>';
+  }).join("");
+}
+
+async function exportData(table){
+  showToast("Fetching "+table+"…","info");
+  var r = await db.from(table).select("*");
+  if(r.error){ showToast("Export failed: "+r.error.message,"error"); return; }
+  var json = JSON.stringify(r.data||[], null, 2);
+  var blob = new Blob([json],{type:"application/json"});
+  var url  = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href=url; a.download="wizup_"+table+"_"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("Exported "+table+".json!","success");
+}
+</script>
+</body>
+</html>

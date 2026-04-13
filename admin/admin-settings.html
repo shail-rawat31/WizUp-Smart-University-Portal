@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>App Settings – WizUP Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-shared.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.settings-section{display:flex;flex-direction:column;gap:14px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.setting-row:last-child{border-bottom:none}
+.setting-info h4{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
+.setting-info p{font-size:12px;color:#8892b0;line-height:1.5}
+.toggle-sw{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle-sw input{opacity:0;width:0;height:0}
+.toggle-sw .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#333;border-radius:24px;transition:.3s}
+.toggle-sw .slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle-sw input:checked+.slider{background:#ff9100}
+.toggle-sw input:checked+.slider:before{transform:translateX(20px)}
+.info-banner{padding:14px 18px;border-radius:10px;border:1px solid rgba(56,189,248,.3);background:rgba(56,189,248,.07);font-size:12px;color:#7dd3fc;line-height:1.6;display:flex;gap:10px;align-items:flex-start}
+</style>
+</head>
+<body>
+<header class="adm-header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="adm-logo"/>
+  <div><div class="adm-title">App Settings</div><div class="adm-sub">Configure system-wide settings and integrations</div></div>
+  <div class="adm-spacer"></div>
+  <div class="adm-header-btns">
+    <a href="admin-dashboard.html" class="ico-btn"><i class="fa-solid fa-house"></i></a>
+    <div class="user-chip"><div class="user-avatar" id="userAvatar">A</div><div><div class="user-name" id="userName">Admin</div><div class="user-role">Super Admin</div></div></div>
+    <button class="ico-btn danger" onclick="doSignOut()"><i class="fa-solid fa-power-off"></i></button>
+  </div>
+</header>
+<div class="adm-wrap">
+  <aside class="adm-sidebar" id="sidebar"></aside>
+  <main class="adm-content">
+    <div class="pg-head">
+      <div><h1 class="pg-title"><i class="fa-solid fa-gears"></i>App Settings</h1><p class="pg-sub">Manage authentication, notifications, and system configuration</p></div>
+      <button class="btn btn-primary" onclick="saveAll()"><i class="fa-solid fa-floppy-disk"></i> Save All Settings</button>
+    </div>
+
+    <div class="info-banner"><i class="fa-solid fa-circle-info" style="margin-top:1px;flex-shrink:0"></i><span>Settings below are applied system-wide. Changes take effect immediately. Some settings (Supabase URL, JWT) require a server restart to take effect.</span></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+      <!-- University Info -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-university"></i> University Information</h3></div>
+        <div class="card-bd settings-section">
+          <div class="form-group" style="margin:0"><label>University Name</label><input class="form-control" id="uniName" value="WizUP University"/></div>
+          <div class="form-group" style="margin:0"><label>University Code / Abbreviation</label><input class="form-control" id="uniCode" placeholder="e.g. WIZUP, MCA-2024"/></div>
+          <div class="form-group" style="margin:0"><label>Academic Year</label><input class="form-control" id="acYear" value="2025–2026"/></div>
+          <div class="form-group" style="margin:0"><label>Current Semester</label>
+            <select class="form-control" id="curSem"><option>Odd (1,3,5)</option><option>Even (2,4,6)</option></select>
+          </div>
+          <div class="form-group" style="margin:0"><label>Admin Contact Email</label><input class="form-control" id="adminEmail" type="email" placeholder="admin@wizup.edu"/></div>
+        </div>
+      </div>
+
+      <!-- System Features -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-toggle-on"></i> Feature Toggles</h3></div>
+        <div class="card-bd settings-section">
+          <div class="setting-row"><div class="setting-info"><h4>Attendance Tracking</h4><p>Enable real-time attendance marking by faculty</p></div><label class="toggle-sw"><input type="checkbox" id="ft-att" checked/><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="setting-info"><h4>Leave Management</h4><p>Allow students and faculty to apply for leaves</p></div><label class="toggle-sw"><input type="checkbox" id="ft-leave" checked/><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="setting-info"><h4>Document Services</h4><p>Enable certificate requests and HOD document approvals</p></div><label class="toggle-sw"><input type="checkbox" id="ft-docs" checked/><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="setting-info"><h4>Global Announcements</h4><p>Allow admins to broadcast circulars to all users</p></div><label class="toggle-sw"><input type="checkbox" id="ft-ann" checked/><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="setting-info"><h4>Student Placement Module</h4><p>Show placement & career registration to students</p></div><label class="toggle-sw"><input type="checkbox" id="ft-place" checked/><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="setting-info"><h4>Maintenance Mode</h4><p>Show maintenance message to all non-admin users</p></div><label class="toggle-sw"><input type="checkbox" id="ft-maint"/><span class="slider"></span></label></div>
+        </div>
+      </div>
+
+      <!-- Supabase Config -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-database"></i> Backend Configuration</h3></div>
+        <div class="card-bd settings-section">
+          <div class="form-group" style="margin:0"><label>Supabase Project URL</label><input class="form-control" id="sbUrl" value="https://vqxhbfbpqwpdbmgtdcik.supabase.co" readonly style="opacity:.6"/></div>
+          <div class="form-group" style="margin:0"><label>Storage Bucket</label><input class="form-control" id="sbBucket" value="uploads" readonly style="opacity:.6"/></div>
+          <div class="form-group" style="margin:0"><label>Max File Upload Size</label>
+            <select class="form-control" id="maxFile"><option>5 MB</option><option selected>10 MB</option><option>20 MB</option><option>50 MB</option></select>
+          </div>
+          <div class="info-banner" style="margin-top:4px"><i class="fa-solid fa-lock" style="flex-shrink:0;margin-top:1px"></i><span>Supabase URL and keys are managed in the source files. Use the Supabase Dashboard to update credentials.</span></div>
+        </div>
+      </div>
+
+      <!-- Notification Settings -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-bell"></i> Notification Settings</h3></div>
+        <div class="card-bd settings-section">
+          <div class="setting-row"><div class="setting-info"><h4>Leave Approval Notifications</h4><p>Notify students/faculty when leaves are approved or rejected</p></div><label class="toggle-sw"><input type="checkbox" id="n-leave" checked/><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="setting-info"><h4>Document Ready Alerts</h4><p>Notify requesters when their document is ready</p></div><label class="toggle-sw"><input type="checkbox" id="n-docs" checked/><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="setting-info"><h4>HOD Announcement Push</h4><p>Send push alerts when HOD posts department announcements</p></div><label class="toggle-sw"><input type="checkbox" id="n-ann"/><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="setting-info"><h4>Low Attendance Alerts</h4><p>Alert students when attendance drops below 75%</p></div><label class="toggle-sw"><input type="checkbox" id="n-att" checked/><span class="slider"></span></label></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toastWrap"></div>
+<script src="admin-shared.js"></script>
+<script>
+document.getElementById("sidebar").innerHTML = SIDEBAR_HTML;
+
+window.onload = async function(){
+  var ok = await requireAdmin(); if(!ok) return;
+  initSidebar();
+  loadSettings();
+};
+
+function loadSettings(){
+  var stored;
+  try{ stored = JSON.parse(localStorage.getItem("wizup_admin_settings")||"{}"); } catch(e){ stored={}; }
+  if(stored.uniName) document.getElementById("uniName").value = stored.uniName;
+  if(stored.acYear)  document.getElementById("acYear").value  = stored.acYear;
+  ["ft-att","ft-leave","ft-docs","ft-ann","ft-place","ft-maint","n-leave","n-docs","n-ann","n-att"].forEach(function(id){
+    if(id in stored) document.getElementById(id).checked = stored[id];
+  });
+}
+
+function saveAll(){
+  var data = {
+    uniName: document.getElementById("uniName").value,
+    uniCode: document.getElementById("uniCode").value,
+    acYear:  document.getElementById("acYear").value
+  };
+  ["ft-att","ft-leave","ft-docs","ft-ann","ft-place","ft-maint","n-leave","n-docs","n-ann","n-att"].forEach(function(id){
+    data[id] = document.getElementById(id).checked;
+  });
+  localStorage.setItem("wizup_admin_settings", JSON.stringify(data));
+  showToast("Settings saved successfully!","success");
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Transport System – WizUP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/premium-dashboard.css" />
+    <style>
+        body { margin: 0; background-color: #050505; color: #fff; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); position: sticky; top: 0; z-index: 100; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand i { font-size: 28px; color: #ff9100; }
+        .brand h1 { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; }
+        .back-btn { color: #fca5a5; text-decoration: none; font-size: 13px; font-weight: 700; transition: transform 0.3s; display: flex; align-items: center; gap: 8px; }
+        .back-btn:hover { color: #fff; transform: translateX(-5px); }
+        
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 350px; gap: 30px; }
+        
+        .map-placeholder { width: 100%; height: 400px; background: url('https://upload.wikimedia.org/wikipedia/commons/e/ea/Map_of_the_World_-_dark.png') center/cover; border-radius: 16px; border: 1px solid rgba(255, 145, 0, 0.3); box-shadow: 0 10px 40px rgba(255, 145, 0, 0.2); position: relative; overflow: hidden; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; }
+        .map-placeholder::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); }
+        .map-overlay { position: relative; z-index: 2; text-align: center; }
+        .map-overlay i { font-size: 50px; color: #ff9100; margin-bottom: 16px; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .map-overlay h3 { font-family: 'Outfit'; font-size: 24px; margin: 0; }
+        .map-overlay p { font-size: 13px; color: rgba(255,255,255,0.7); }
+
+        .route-card { padding: 24px; display: flex; align-items: center; gap: 20px; }
+        .route-icon { width: 50px; height: 50px; background: rgba(255, 145, 0, 0.1); border: 1px solid rgba(255, 145, 0, 0.4); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #ff9100; }
+        .route-info { flex: 1; }
+        .route-info h4 { margin: 0 0 6px 0; font-family: 'Outfit'; font-size: 18px; font-weight: 800; }
+        .route-info p { margin: 0; font-size: 12px; color: #8892b0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .timeline { display: flex; flex-direction: column; gap: 0; margin-top: 16px; position: relative; padding-left: 20px; }
+        .timeline::before { content: ''; position: absolute; left: 6px; top: 10px; bottom: 10px; width: 2px; background: rgba(255,255,255,0.1); }
+        .stop { position: relative; padding: 12px 0 12px 20px; display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #fff; }
+        .stop::before { content: ''; position: absolute; left: -18px; top: 50%; transform: translateY(-50%); width: 10px; height: 10px; border-radius: 50%; background: #000; border: 2px solid #ff9100; }
+        .stop-time { color: #8892b0; font-family: 'Outfit'; font-weight: 800; font-size: 12px; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; }
+
+        .pass-side .card { padding: 30px; border-color: rgba(255, 145, 0, 0.2) !important; }
+        .pass-side h3 { font-family: 'Outfit'; font-size: 20px; margin-top: 0; margin-bottom: 20px; text-align: center; }
+        .pass-btn { width: 100%; padding: 16px; margin-top: 16px; border-radius: 12px; background: linear-gradient(135deg, #ff9100, #ff3d00); border: none; color: #fff; font-weight: 800; font-family: 'Outfit'; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 30px rgba(255, 145, 0, 0.3); }
+        .pass-btn:hover { box-shadow: 0 15px 40px rgba(255, 145, 0, 0.5); transform: translateY(-4px); }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand">
+            <i class="fa-solid fa-bus"></i>
+            <h1>Transport Services</h1>
+        </div>
+        <a href="student-dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+    
+    <div class="container">
+        <div class="main-content">
+            <div class="map-placeholder">
+                <div class="map-overlay">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <h3>Live GPS Tracking</h3>
+                    <p>Live bus location will appear here during active hours.</p>
+                </div>
+            </div>
+            
+            <div class="card route-card">
+                <div class="route-icon"><i class="fa-solid fa-route"></i></div>
+                <div class="route-info">
+                    <h4>Route #42 - City Loop</h4>
+                    <p>Next Bus in 14 mins</p>
+                    <div class="timeline">
+                        <div class="stop">Campus Main Gate <span class="stop-time">08:00 AM</span></div>
+                        <div class="stop">Metro Station <span class="stop-time">08:15 AM</span></div>
+                        <div class="stop" style="color: #ff9100;">Downtown Mall <span class="stop-time">08:30 AM</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pass-side">
+            <div class="card">
+                <h3><i class="fa-solid fa-id-card-clip" style="color: #ff9100;"></i> Digital Bus Pass</h3>
+                <p style="font-size: 12px; color: #8892b0; text-align: center; margin-bottom: 24px; line-height: 1.5;">You currently do not have an active transport pass for this semester.</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <label style="font-size: 11px; font-weight: 700; color: #8892b0; text-transform: uppercase;">Select Route</label>
+                    <select style="width: 100%; padding: 14px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; outline:none; font-family: 'Inter';">
+                        <option>Route #42 - City Loop</option>
+                        <option>Route #05 - North Suburbs</option>
+                        <option>Route #11 - Tech Park Express</option>
+                    </select>
+                </div>
+                
+                <div style="background: rgba(255, 145, 0, 0.1); border: 1px dashed rgba(255, 145, 0, 0.3); border-radius: 12px; padding: 16px; margin-top: 20px; text-align: center;">
+                    <p style="margin: 0; font-size: 11px; color: #ff9100; font-weight: 700; text-transform: uppercase;">Fee Amount</p>
+                    <h2 style="margin: 5px 0 0; font-family: 'Outfit'; font-size: 32px;">$150<span style="font-size: 14px; color: #8892b0;">/sem</span></h2>
+                </div>
+                
+                <button class="pass-btn">Apply Now</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

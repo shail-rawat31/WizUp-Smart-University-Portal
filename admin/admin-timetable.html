@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Timetable Engine – WizUP Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-shared.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.tt-grid{display:grid;grid-template-columns:60px repeat(6,1fr);font-size:12px;border:1px solid rgba(255,145,0,.15);border-radius:12px;overflow:hidden}
+.tt-hd{background:rgba(0,0,0,.5);padding:10px 6px;text-align:center;font-weight:800;font-size:11px;color:#ff9100;text-transform:uppercase;border-bottom:1px solid rgba(255,145,0,.15)}
+.tt-time{background:rgba(0,0,0,.3);padding:8px 6px;text-align:center;font-size:10px;color:#8892b0;font-weight:700;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center}
+.tt-cell{padding:6px;border-bottom:1px solid rgba(255,255,255,.04);border-left:1px solid rgba(255,255,255,.04);min-height:54px;display:flex;align-items:center;justify-content:center;text-align:center}
+.tt-slot{background:rgba(255,145,0,.1);border:1px solid rgba(255,145,0,.25);border-radius:6px;padding:5px 7px;width:100%;font-size:10px;font-weight:700;color:#ff9100;line-height:1.4}
+.tt-slot .sub{color:#94a3b8;font-weight:400;font-size:9px;margin-top:2px}
+</style>
+</head>
+<body>
+<header class="adm-header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="adm-logo"/>
+  <div><div class="adm-title">Timetable Engine</div><div class="adm-sub">View and manage class schedules</div></div>
+  <div class="adm-spacer"></div>
+  <div class="adm-header-btns">
+    <a href="admin-dashboard.html" class="ico-btn"><i class="fa-solid fa-house"></i></a>
+    <div class="user-chip"><div class="user-avatar" id="userAvatar">A</div><div><div class="user-name" id="userName">Admin</div><div class="user-role">Super Admin</div></div></div>
+    <button class="ico-btn danger" onclick="doSignOut()"><i class="fa-solid fa-power-off"></i></button>
+  </div>
+</header>
+<div class="adm-wrap">
+  <aside class="adm-sidebar" id="sidebar"></aside>
+  <main class="adm-content">
+    <div class="pg-head">
+      <div><h1 class="pg-title"><i class="fa-solid fa-calendar-days"></i>Timetable Engine</h1><p class="pg-sub">Add, edit and view class schedules across departments</p></div>
+      <button class="btn btn-primary" onclick="openAdd()"><i class="fa-solid fa-plus"></i> Add Slot</button>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h3><i class="fa-solid fa-filter"></i> Filter Timetable</h3></div>
+      <div class="card-bd" style="display:flex;gap:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <label style="font-size:11px;font-weight:700;color:#8892b0;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Department</label>
+          <select class="form-control" id="deptFilter" onchange="loadTimetable()"><option value="">All Departments</option></select>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <label style="font-size:11px;font-weight:700;color:#8892b0;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Subject</label>
+          <select class="form-control" id="subFilter" onchange="loadTimetable()"><option value="">All Subjects</option></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visual Timetable -->
+    <div class="card">
+      <div class="card-hd"><h3><i class="fa-solid fa-table"></i> Weekly Schedule</h3><button class="btn btn-ghost btn-sm" onclick="loadTimetable()"><i class="fa-solid fa-rotate-right"></i></button></div>
+      <div class="card-bd" style="overflow-x:auto">
+        <div class="tt-grid" id="ttGrid">
+          <div class="tt-hd">Time</div>
+          <div class="tt-hd">Monday</div><div class="tt-hd">Tuesday</div><div class="tt-hd">Wednesday</div>
+          <div class="tt-hd">Thursday</div><div class="tt-hd">Friday</div><div class="tt-hd">Saturday</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Raw Table -->
+    <div class="card">
+      <div class="card-hd"><h3><i class="fa-solid fa-list"></i> All Timetable Entries</h3></div>
+      <div style="overflow-x:auto">
+        <table class="data-table"><thead><tr><th>Subject</th><th>Day</th><th>Start</th><th>End</th><th>Room</th><th>Actions</th></tr></thead>
+        <tbody id="ttTable"><tr><td colspan="6" style="text-align:center;padding:24px;color:#555"><i class="fa-solid fa-spinner fa-spin"></i></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-ov" id="ttModal">
+  <div class="modal">
+    <h3 id="ttModalTitle">Add Timetable Slot</h3><p class="modal-sub">Assign a subject to a time slot</p>
+    <input type="hidden" id="ttId"/>
+    <div class="form-group"><label>Subject *</label><select class="form-control" id="ttSubject"><option value="">Select…</option></select></div>
+    <div class="form-group"><label>Day *</label>
+      <select class="form-control" id="ttDay">
+        <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option>
+      </select>
+    </div>
+    <div class="input-row">
+      <div class="form-group"><label>Start Time *</label><input class="form-control" type="time" id="ttStart" value="09:00"/></div>
+      <div class="form-group"><label>End Time *</label><input class="form-control" type="time" id="ttEnd" value="10:00"/></div>
+    </div>
+    <div class="form-group"><label>Room / Hall</label><input class="form-control" id="ttRoom" placeholder="e.g. Room 101"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="ttSaveBtn" onclick="saveSlot()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+    </div>
+  </div>
+</div>
+<div id="toastWrap"></div>
+<script src="admin-shared.js"></script>
+<script>
+document.getElementById("sidebar").innerHTML = SIDEBAR_HTML;
+var slots=[], subjects=[], depts=[];
+var DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var TIMES=["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
+
+window.onload = async function(){
+  var ok = await requireAdmin(); if(!ok) return;
+  initSidebar();
+  var [dr, sr] = await Promise.all([db.from("departments").select("*").order("name"), db.from("subjects").select("*").order("name")]);
+  depts = dr.data||[]; subjects = sr.data||[];
+
+  var df = document.getElementById("deptFilter");
+  depts.forEach(function(d){ df.innerHTML += '<option value="'+d.id+'">'+d.name+'</option>'; });
+  var sf = document.getElementById("subFilter");
+  subjects.forEach(function(s){ sf.innerHTML += '<option value="'+s.id+'">'+(s.subject_code?"["+s.subject_code+"] ":"")+s.name+'</option>'; });
+  var ts = document.getElementById("ttSubject");
+  subjects.forEach(function(s){ ts.innerHTML += '<option value="'+s.id+'">'+(s.subject_code?"["+s.subject_code+"] ":"")+s.name+'</option>'; });
+  loadTimetable();
+};
+
+async function loadTimetable(){
+  var df = document.getElementById("deptFilter").value;
+  var sf = document.getElementById("subFilter").value;
+  var q = db.from("timetable").select("*,subject:subject_id(name,subject_code,department_id)").order("day_of_week").order("start_time");
+  var r = await q;
+  slots = (r.data||[]).filter(function(s){
+    var sub = Array.isArray(s.subject)?s.subject[0]:s.subject;
+    if(df && sub && sub.department_id!==df) return false;
+    if(sf && s.subject_id!==sf) return false;
+    return true;
+  });
+  renderGrid();
+  renderTable();
+}
+
+function renderGrid(){
+  var g = document.getElementById("ttGrid");
+  var header = '<div class="tt-hd">Time</div>';
+  DAYS.forEach(function(d){ header += '<div class="tt-hd">'+d+'</div>'; });
+  var rows = "";
+  TIMES.forEach(function(t,i){
+    if(i===TIMES.length-1) return;
+    var endT = TIMES[i+1];
+    rows += '<div class="tt-time">'+t+'</div>';
+    DAYS.forEach(function(day){
+      var slot = slots.find(function(s){ return s.day_of_week===day && s.start_time===t+":00"; });
+      if(slot){
+        var sub = Array.isArray(slot.subject)?slot.subject[0]:slot.subject;
+        rows += '<div class="tt-cell"><div class="tt-slot">'+(sub?sub.name:"Subject")+'<div class="sub">'+(slot.room||"")+'</div></div></div>';
+      } else {
+        rows += '<div class="tt-cell"></div>';
+      }
+    });
+  });
+  g.innerHTML = header + rows;
+}
+
+function renderTable(){
+  var tb = document.getElementById("ttTable");
+  if(!slots.length){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:#555">No timetable entries</td></tr>'; return; }
+  tb.innerHTML = slots.map(function(s){
+    var sub = Array.isArray(s.subject)?s.subject[0]:s.subject;
+    return '<tr>'
+      +'<td style="font-weight:600">'+(sub?((sub.subject_code?"["+sub.subject_code+"] ":"")+sub.name):"—")+'</td>'
+      +'<td><span class="badge b-orange">'+s.day_of_week+'</span></td>'
+      +'<td style="font-size:12px">'+(s.start_time||"").slice(0,5)+'</td>'
+      +'<td style="font-size:12px">'+(s.end_time||"").slice(0,5)+'</td>'
+      +'<td style="color:#94a3b8">'+(s.room||"—")+'</td>'
+      +'<td><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" onclick="openEdit(\''+s.id+'\')"><i class="fa-solid fa-pen"></i></button>'
+      +'<button class="btn btn-danger btn-xs" onclick="deleteSlot(\''+s.id+'\')"><i class="fa-solid fa-trash"></i></button></div></td>'
+      +'</tr>';
+  }).join("");
+}
+
+function openAdd(){
+  document.getElementById("ttModalTitle").textContent="Add Timetable Slot";
+  document.getElementById("ttId").value="";
+  document.getElementById("ttSubject").value="";
+  document.getElementById("ttDay").value="Monday";
+  document.getElementById("ttStart").value="09:00";
+  document.getElementById("ttEnd").value="10:00";
+  document.getElementById("ttRoom").value="";
+  document.getElementById("ttModal").classList.add("open");
+}
+function openEdit(id){
+  var s=slots.find(function(x){ return x.id===id; }); if(!s) return;
+  document.getElementById("ttModalTitle").textContent="Edit Timetable Slot";
+  document.getElementById("ttId").value=s.id;
+  document.getElementById("ttSubject").value=s.subject_id||"";
+  document.getElementById("ttDay").value=s.day_of_week;
+  document.getElementById("ttStart").value=(s.start_time||"").slice(0,5);
+  document.getElementById("ttEnd").value=(s.end_time||"").slice(0,5);
+  document.getElementById("ttRoom").value=s.room||"";
+  document.getElementById("ttModal").classList.add("open");
+}
+function closeModal(){ document.getElementById("ttModal").classList.remove("open"); }
+
+async function saveSlot(){
+  var id=document.getElementById("ttId").value;
+  var payload={
+    subject_id:document.getElementById("ttSubject").value||null,
+    day_of_week:document.getElementById("ttDay").value,
+    start_time:document.getElementById("ttStart").value+":00",
+    end_time:document.getElementById("ttEnd").value+":00",
+    room:document.getElementById("ttRoom").value.trim()||"TBD"
+  };
+  if(!payload.subject_id){ showToast("Please select a subject","error"); return; }
+  var btn=document.getElementById("ttSaveBtn"); btn.disabled=true;
+  var res=id?await db.from("timetable").update(payload).eq("id",id):await db.from("timetable").insert(payload);
+  btn.disabled=false;
+  if(res.error){ showToast("Failed: "+res.error.message,"error"); return; }
+  showToast(id?"Slot updated!":"Slot added!","success"); closeModal(); loadTimetable();
+}
+
+async function deleteSlot(id){
+  if(!confirm("Delete this timetable slot?")) return;
+  var res=await db.from("timetable").delete().eq("id",id);
+  if(res.error){ showToast("Failed: "+res.error.message,"error"); return; }
+  showToast("Slot deleted","info"); loadTimetable();
+}
+</script>
+</body>
+</html>

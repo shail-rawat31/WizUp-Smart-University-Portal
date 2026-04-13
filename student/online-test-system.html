@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Online Test System – WizUP Student</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--card:rgba(20,20,25,.72);--border:rgba(229,56,59,.15);--b2:rgba(255,255,255,.09);--muted:#8892b0;--brand:#e5383b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;font-family:'Inter',sans-serif;background:url("../assets/images/bg1.jpg") center/cover no-repeat fixed;background-color:#050505;color:#fff}
+.overlay{position:fixed;inset:0;background:radial-gradient(circle at 70% 40%,rgba(0,0,0,.15),rgba(0,0,0,.84));pointer-events:none;z-index:0}
+.topbar{display:flex;align-items:center;gap:14px;padding:12px 24px;background:rgba(0,0,0,.82);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.logo{width:44px;height:44px;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.1);overflow:hidden}
+.logo img{width:75%}
+.t-title h1{margin:0;font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;letter-spacing:1px}
+.t-title p{margin:0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.spacer{flex:1}
+.nav-link{color:#fca5a5;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;transition:.2s}
+.nav-link:hover{color:#fff}
+.container{width:min(1000px,95vw);margin:30px auto;position:relative;z-index:1}
+.page-title{font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;margin-bottom:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);box-shadow:0 10px 30px rgba(0,0,0,.3);overflow:hidden;margin-bottom:20px}
+.card-hd{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;background:rgba(229,56,59,.05)}
+.card-hd h2{font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.card-bd{padding:24px}
+.test-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.test-card{padding:20px;border:1px solid var(--b2);border-radius:12px;background:rgba(0,0,0,.3);transition:.25s;cursor:pointer}
+.test-card:hover{border-color:rgba(229,56,59,.4);background:rgba(229,56,59,.06);transform:translateY(-3px)}
+.test-badge{display:inline-flex;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;margin-bottom:10px}
+.t-upcoming{background:rgba(56,189,248,.15);color:#7dd3fc;border:1px solid rgba(56,189,248,.3)}
+.t-available{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+.t-past{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.2)}
+.test-name{font-family:'Outfit',sans-serif;font-size:17px;font-weight:800;margin-bottom:4px}
+.test-meta{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+.test-footer{display:flex;align-items:center;justify-content:space-between}
+.btn{background:var(--brand);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px;font-family:'Inter',sans-serif}
+.btn:hover{background:#b21f2d}
+.btn.outline{background:none;border:1px solid var(--b2);color:#fff}
+.btn.outline:hover{border-color:var(--brand);background:rgba(229,56,59,.08)}
+/* Test-taking UI */
+#testUI{display:none}
+.test-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:rgba(0,0,0,.5);border-bottom:1px solid var(--b2)}
+.timer{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:#fca5a5}
+.q-nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+.q-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--b2);background:rgba(0,0,0,.3);color:#fff;cursor:pointer;font-size:12px;font-weight:700;transition:.15s}
+.q-btn.answered{background:rgba(34,197,94,.25);border-color:rgba(34,197,94,.5)}
+.q-btn.current{background:rgba(229,56,59,.25);border-color:rgba(229,56,59,.5)}
+.option{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid var(--b2);border-radius:10px;margin-bottom:10px;cursor:pointer;transition:.2s}
+.option:hover{border-color:rgba(229,56,59,.4);background:rgba(229,56,59,.06)}
+.option.selected{border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.1)}
+.option.correct{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.1)}
+.option.wrong{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.1)}
+.opt-circle{width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 14px;font-size:11px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--b2);font-weight:700}
+td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+</style>
+</head>
+<body>
+<div class="overlay"></div>
+<div class="topbar">
+  <div class="logo"><img src="../assets/images/LOGO1.png" alt="WizUP"/></div>
+  <div class="t-title"><h1>Online Test System</h1><p>Practice & assessments</p></div>
+  <div class="spacer"></div>
+  <a href="student-dashboard.html" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+</div>
+
+<div class="container">
+  <!-- Test listing -->
+  <div id="listUI">
+    <h2 class="page-title">Online Tests & Assessments</h2>
+
+    <div class="card">
+      <div class="card-hd"><h2><i class="fa-solid fa-circle-dot" style="color:#86efac"></i>Available Now</h2></div>
+      <div class="card-bd">
+        <div class="test-grid">
+          <div class="test-card" onclick="startTest('ds')">
+            <div class="test-badge t-available">Available</div>
+            <div class="test-name">Data Structures – Unit 3</div>
+            <div class="test-meta">10 Questions · 20 Minutes<br>Topics: Trees, Graphs, Sorting<br>Marks: 20 | Attempts left: 1</div>
+            <div class="test-footer"><span style="font-size:11px;color:var(--muted)">Due: 10 Mar 2025</span><button class="btn"><i class="fa-solid fa-play"></i> Start</button></div>
+          </div>
+          <div class="test-card" onclick="startTest('ml')">
+            <div class="test-badge t-available">Available</div>
+            <div class="test-name">Machine Learning – Quiz 2</div>
+            <div class="test-meta">10 Questions · 15 Minutes<br>Topics: Regression, SVM, CNN<br>Marks: 10 | Attempts left: 2</div>
+            <div class="test-footer"><span style="font-size:11px;color:var(--muted)">Due: 12 Mar 2025</span><button class="btn"><i class="fa-solid fa-play"></i> Start</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h2><i class="fa-solid fa-clock" style="color:#7dd3fc"></i>Upcoming</h2></div>
+      <div class="card-bd">
+        <div class="test-grid">
+          <div class="test-card">
+            <div class="test-badge t-upcoming">Upcoming</div>
+            <div class="test-name">OS – Mid-Sem Mock</div>
+            <div class="test-meta">20 Questions · 30 Minutes<br>Opens: 18 Mar 2025, 9:00 AM</div>
+            <div class="test-footer"><span style="font-size:11px;color:#7dd3fc">Opens in 8 days</span><button class="btn outline" disabled>Locked</button></div>
+          </div>
+          <div class="test-card">
+            <div class="test-badge t-upcoming">Upcoming</div>
+            <div class="test-name">DBMS – Assignment Quiz</div>
+            <div class="test-meta">15 Questions · 25 Minutes<br>Opens: 20 Mar 2025, 2:00 PM</div>
+            <div class="test-footer"><span style="font-size:11px;color:#7dd3fc">Opens in 10 days</span><button class="btn outline" disabled>Locked</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h2><i class="fa-solid fa-check-double" style="color:var(--muted)"></i>Past Results</h2></div>
+      <div class="card-bd" style="padding:0">
+        <table>
+          <thead><tr><th>Test</th><th>Subject</th><th>Score</th><th>Max</th><th>Date</th><th>Grade</th></tr></thead>
+          <tbody>
+            <tr><td>Unit 1 Quiz</td><td>Data Structures</td><td style="color:#86efac;font-weight:700">18</td><td>20</td><td>10 Jan 2025</td><td><span style="color:#fbbf24;font-size:13px">★ A+</span></td></tr>
+            <tr><td>Quiz 1</td><td>Machine Learning</td><td style="color:#86efac;font-weight:700">9</td><td>10</td><td>15 Jan 2025</td><td><span style="color:#fbbf24;font-size:13px">★ A+</span></td></tr>
+            <tr><td>Unit 2 Test</td><td>Software Engineering</td><td style="color:#fcd34d;font-weight:700">14</td><td>20</td><td>20 Jan 2025</td><td><span style="color:#fbbf24;font-size:13px">★ B+</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test taking UI -->
+  <div id="testUI">
+    <div class="card">
+      <div class="test-header">
+        <div>
+          <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:800" id="testTitle">Test</div>
+          <div style="font-size:12px;color:var(--muted)">Answer all questions before time runs out</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Time Remaining</div>
+          <div class="timer" id="timer">20:00</div>
+        </div>
+      </div>
+      <div class="card-bd">
+        <div id="qNav" class="q-nav"></div>
+        <div id="questionArea"></div>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button class="btn outline" id="prevBtn" onclick="nav(-1)"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+          <button class="btn outline" id="nextBtn" onclick="nav(1)">Next <i class="fa-solid fa-arrow-right"></i></button>
+          <button class="btn" style="margin-left:auto" onclick="submitTest()"><i class="fa-solid fa-flag-checkered"></i> Submit Test</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TESTS={
+  ds:{title:'Data Structures – Unit 3',duration:1200,questions:[
+    {q:'Which data structure uses LIFO?',opts:['Queue','Stack','Tree','Heap'],ans:1},
+    {q:'Time complexity of binary search?',opts:['O(n)','O(n²)','O(log n)','O(1)'],ans:2},
+    {q:'Inorder traversal visits nodes in which order?',opts:['Root-Left-Right','Left-Root-Right','Left-Right-Root','Root-Right-Left'],ans:1},
+    {q:'Which sorting algorithm has O(n log n) average case?',opts:['Bubble Sort','Insertion Sort','Merge Sort','Selection Sort'],ans:2},
+    {q:'A complete binary tree with n leaves has how many internal nodes?',opts:['n','n-1','n+1','2n'],ans:1},
+    {q:'Dijkstra\'s algorithm finds?',opts:['Minimum spanning tree','Shortest path','Topological sort','DFS order'],ans:1},
+    {q:'Which tree is always balanced?',opts:['BST','AVL Tree','Binary Tree','Heap'],ans:1},
+    {q:'Stack overflow occurs due to?',opts:['Infinite recursion','Large arrays','Slow network','Memory leak'],ans:0},
+    {q:'BFS uses which data structure?',opts:['Stack','Queue','Tree','Graph'],ans:1},
+    {q:'Hash collision is resolved by?',opts:['Merging','Chaining','Splitting','Deletion'],ans:1},
+  ]},
+  ml:{title:'Machine Learning – Quiz 2',duration:900,questions:[
+    {q:'Which algorithm is supervised?',opts:['K-Means','DBSCAN','SVM','PCA'],ans:2},
+    {q:'Overfitting means the model?',opts:['Underfits training data','Performs well on test data','Memorizes training data','Has low variance'],ans:2},
+    {q:'Activation function for binary classification output?',opts:['ReLU','Sigmoid','Tanh','Linear'],ans:1},
+    {q:'What does CNN stand for?',opts:['Convolutional Neural Network','Cyclic Neural Net','Clustering Neural Node','None'],ans:0},
+    {q:'Gradient descent minimizes?',opts:['Accuracy','Loss function','Precision','Recall'],ans:1},
+    {q:'Dropout in neural networks prevents?',opts:['Underfitting','Overfitting','Slow training','Data loss'],ans:1},
+    {q:'K in K-Nearest Neighbors means?',opts:['Kernel','Number of neighbours','Keypoints','None'],ans:1},
+    {q:'Which metric is best for imbalanced datasets?',opts:['Accuracy','F1 Score','MSE','R²'],ans:1},
+    {q:'PCA is used for?',opts:['Classification','Dimensionality reduction','Clustering','Regression'],ans:1},
+    {q:'Which is a generative model?',opts:['SVM','Decision Tree','GAN','KNN'],ans:2},
+  ]}
+};
+let activeTest=null,currentQ=0,answers={},timerInterval=null,remaining=0;
+
+function startTest(id){
+  activeTest=TESTS[id];answers={};currentQ=0;remaining=activeTest.duration;
+  document.getElementById('listUI').style.display='none';
+  document.getElementById('testUI').style.display='block';
+  document.getElementById('testTitle').textContent=activeTest.title;
+  renderQNav();renderQuestion();
+  timerInterval=setInterval(()=>{
+    remaining--;
+    const m=Math.floor(remaining/60),s=remaining%60;
+    document.getElementById('timer').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if(remaining<=0){clearInterval(timerInterval);submitTest();}
+  },1000);
+}
+function renderQNav(){
+  document.getElementById('qNav').innerHTML=activeTest.questions.map((_,i)=>`<button class="q-btn ${i===currentQ?'current':''} ${answers[i]!==undefined?'answered':''}" onclick="gotoQ(${i})">${i+1}</button>`).join('');
+}
+function renderQuestion(){
+  const q=activeTest.questions[currentQ];
+  const sel=answers[currentQ];
+  document.getElementById('questionArea').innerHTML=`
+  <div style="margin-bottom:20px">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Question ${currentQ+1} of ${activeTest.questions.length}</div>
+    <div style="font-size:16px;font-weight:600;line-height:1.5">${q.q}</div>
+  </div>
+  ${q.opts.map((o,i)=>`<div class="option ${sel===i?'selected':''}" onclick="selectAns(${i})">
+    <div class="opt-circle">${String.fromCharCode(65+i)}</div>
+    <span style="font-size:14px">${o}</span>
+  </div>`).join('')}`;
+}
+function gotoQ(i){currentQ=i;renderQNav();renderQuestion();}
+function nav(dir){currentQ=Math.max(0,Math.min(activeTest.questions.length-1,currentQ+dir));renderQNav();renderQuestion();}
+function selectAns(i){answers[currentQ]=i;renderQNav();renderQuestion();}
+function submitTest(){
+  clearInterval(timerInterval);
+  const total=activeTest.questions.length;
+  let score=0;
+  activeTest.questions.forEach((q,i)=>{if(answers[i]===q.ans)score++;});
+  document.getElementById('testUI').style.display='none';
+  document.getElementById('listUI').style.display='block';
+  alert(`Test submitted!\n\nScore: ${score}/${total} (${Math.round(score/total*100)}%)\n${score>=7?'Excellent!':score>=5?'Good effort!':'Keep practicing!'}`);
+}
+</script>
+</body>
+</html>

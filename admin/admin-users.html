@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>All Users – WizUP Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-shared.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="adm-header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="adm-logo"/>
+  <div><div class="adm-title">User Directory</div><div class="adm-sub">Manage all students, faculty, HODs and admins</div></div>
+  <div class="adm-spacer"></div>
+  <div class="adm-header-btns">
+    <a href="admin-dashboard.html" class="ico-btn"><i class="fa-solid fa-house"></i></a>
+    <div class="user-chip"><div class="user-avatar" id="userAvatar">A</div><div><div class="user-name" id="userName">Admin</div><div class="user-role">Super Admin</div></div></div>
+    <button class="ico-btn danger" onclick="doSignOut()"><i class="fa-solid fa-power-off"></i></button>
+  </div>
+</header>
+<div class="adm-wrap">
+  <aside class="adm-sidebar" id="sidebar"></aside>
+  <main class="adm-content">
+    <div class="pg-head">
+      <div><h1 class="pg-title"><i class="fa-solid fa-users"></i>User Directory</h1><p class="pg-sub">Real-time overview of all WizUP users</p></div>
+      <button class="btn btn-primary" onclick="openAdd()"><i class="fa-solid fa-user-plus"></i> New User</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(255,145,0,.15);color:#ff9100"><i class="fa-solid fa-users"></i></div><div class="sc-val" id="sc-all">—</div><div class="sc-lbl">Total Users</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(167,139,250,.15);color:#c4b5fd"><i class="fa-solid fa-user-graduate"></i></div><div class="sc-val" id="sc-stu">—</div><div class="sc-lbl">Students</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(34,197,94,.15);color:#86efac"><i class="fa-solid fa-chalkboard-user"></i></div><div class="sc-val" id="sc-fac">—</div><div class="sc-lbl">Faculty</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(56,189,248,.15);color:#7dd3fc"><i class="fa-solid fa-user-tie"></i></div><div class="sc-val" id="sc-hod">—</div><div class="sc-lbl">HODs</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(255,145,0,.15);color:#ff9100"><i class="fa-solid fa-shield-halved"></i></div><div class="sc-val" id="sc-adm">—</div><div class="sc-lbl">Admins</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">
+        <h3><i class="fa-solid fa-table-list"></i> All Users</h3>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="userSearch" placeholder="Search by name, email, roll…" oninput="renderUsers()"/></div>
+          <select class="filter-sel" id="roleFilter" onchange="renderUsers()">
+            <option value="">All Roles</option>
+            <option value="student">Student</option>
+            <option value="faculty">Faculty</option>
+            <option value="hod">HOD</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="loadUsers()"><i class="fa-solid fa-rotate-right"></i></button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Roll / Emp Code</th><th>Department</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="userTable"><tr><td colspan="7" style="text-align:center;padding:24px;color:#555"><i class="fa-solid fa-spinner fa-spin"></i> Loading users…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-ov" id="userModal">
+  <div class="modal">
+    <h3 id="modalTitle">New User Profile</h3>
+    <p class="modal-sub">Create a user profile (note: email/password auth via Supabase Auth separately)</p>
+    <input type="hidden" id="uid"/>
+    <div class="form-group"><label>Full Name *</label><input class="form-control" id="uName" placeholder="e.g. Jane Doe"/></div>
+    <div class="form-group"><label>Email</label><input class="form-control" type="email" id="uEmail" placeholder="user@wizup.edu"/></div>
+    <div class="input-row">
+      <div class="form-group"><label>Role *</label>
+        <select class="form-control" id="uRole">
+          <option value="student">Student</option>
+          <option value="faculty">Faculty</option>
+          <option value="hod">HOD</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Roll / Employee Code</label><input class="form-control" id="uCode" placeholder="e.g. MCA001"/></div>
+    </div>
+    <div class="form-group"><label>Department</label>
+      <select class="form-control" id="uDept"><option value="">— None —</option></select>
+    </div>
+    <div class="form-group"><label>Phone</label><input class="form-control" id="uPhone" placeholder="+91 98765 43210"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveUser()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastWrap"></div>
+<script src="admin-shared.js"></script>
+<script>
+document.getElementById("sidebar").innerHTML = SIDEBAR_HTML;
+var allUsers = [], depts = [];
+
+window.onload = async function(){
+  var ok = await requireAdmin(); if(!ok) return;
+  initSidebar();
+  var dr = await db.from("departments").select("*").order("name");
+  depts = dr.data||[];
+  var ds = document.getElementById("uDept");
+  depts.forEach(function(d){ ds.innerHTML += '<option value="'+d.id+'">'+d.name+'</option>'; });
+  loadUsers();
+};
+
+async function loadUsers(){
+  var r = await db.from("profiles").select("*,departments:department_id(name)").order("created_at",{ascending:false});
+  allUsers = r.data||[];
+  var cnt={student:0,faculty:0,hod:0,admin:0};
+  allUsers.forEach(function(u){ if(cnt[u.role]!==undefined) cnt[u.role]++; });
+  document.getElementById("sc-all").textContent = allUsers.length;
+  document.getElementById("sc-stu").textContent = cnt.student;
+  document.getElementById("sc-fac").textContent = cnt.faculty;
+  document.getElementById("sc-hod").textContent = cnt.hod;
+  document.getElementById("sc-adm").textContent = cnt.admin;
+  renderUsers();
+}
+
+function renderUsers(){
+  var q  = document.getElementById("userSearch").value.toLowerCase();
+  var rf = document.getElementById("roleFilter").value;
+  var list = allUsers.filter(function(u){
+    if(rf && u.role!==rf) return false;
+    if(q && !(u.full_name||"").toLowerCase().includes(q) && !(u.email||"").toLowerCase().includes(q) && !(u.roll_no||"").toLowerCase().includes(q) && !(u.employee_code||"").toLowerCase().includes(q)) return false;
+    return true;
+  });
+  var tb = document.getElementById("userTable");
+  if(!list.length){ tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#555">No users found</td></tr>'; return; }
+  tb.innerHTML = list.map(function(u){
+    var dept = Array.isArray(u.departments)?u.departments[0]:u.departments;
+    return '<tr>'
+      +'<td><div style="font-weight:700;color:#fff">'+u.full_name+'</div><div style="font-size:10px;color:#555;font-family:monospace">'+u.id.slice(0,12)+'…</div></td>'
+      +'<td style="font-size:12px;color:#ff9100">'+(u.email||"—")+'</td>'
+      +'<td>'+roleBadge(u.role)+'</td>'
+      +'<td style="font-size:12px;color:#94a3b8">'+(u.roll_no||u.employee_code||"—")+'</td>'
+      +'<td style="font-size:12px;color:#94a3b8">'+(dept?dept.name:"—")+'</td>'
+      +'<td style="font-size:12px;color:#94a3b8">'+fmtDate(u.created_at)+'</td>'
+      +'<td><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" onclick="openEdit(\''+u.id+'\')"><i class="fa-solid fa-pen"></i></button>'
+      +'<button class="btn btn-danger btn-xs" onclick="deleteUser(\''+u.id+'\')"><i class="fa-solid fa-trash"></i></button></div></td>'
+      +'</tr>';
+  }).join("");
+}
+
+function openAdd(){
+  document.getElementById("modalTitle").textContent="New User Profile";
+  document.getElementById("uid").value="";
+  document.getElementById("uName").value="";
+  document.getElementById("uEmail").value="";
+  document.getElementById("uRole").value="student";
+  document.getElementById("uCode").value="";
+  document.getElementById("uDept").value="";
+  document.getElementById("uPhone").value="";
+  document.getElementById("userModal").classList.add("open");
+}
+
+function openEdit(id){
+  var u=allUsers.find(function(x){ return x.id===id; }); if(!u) return;
+  document.getElementById("modalTitle").textContent="Edit User";
+  document.getElementById("uid").value=u.id;
+  document.getElementById("uName").value=u.full_name||"";
+  document.getElementById("uEmail").value=u.email||"";
+  document.getElementById("uRole").value=u.role||"student";
+  document.getElementById("uCode").value=u.roll_no||u.employee_code||"";
+  document.getElementById("uDept").value=u.department_id||"";
+  document.getElementById("uPhone").value=u.phone||"";
+  document.getElementById("userModal").classList.add("open");
+}
+
+function closeModal(){ document.getElementById("userModal").classList.remove("open"); }
+
+async function saveUser(){
+  var id = document.getElementById("uid").value;
+  var role = document.getElementById("uRole").value;
+  var code = document.getElementById("uCode").value.trim();
+  var payload = {
+    full_name:     document.getElementById("uName").value.trim(),
+    email:         document.getElementById("uEmail").value.trim()||null,
+    role:          role,
+    roll_no:       (role==="student"?code:null),
+    employee_code: (role!=="student"?code:null),
+    department_id: document.getElementById("uDept").value||null,
+    phone:         document.getElementById("uPhone").value.trim()||null
+  };
+  if(!payload.full_name){ showToast("Name is required","error"); return; }
+  var btn=document.getElementById("saveBtn"); btn.disabled=true;
+  var res = id ? await db.from("profiles").update(payload).eq("id",id) : await db.from("profiles").insert(payload);
+  btn.disabled=false;
+  if(res.error){ showToast("Failed: "+res.error.message,"error"); return; }
+  showToast(id?"User updated!":"Profile created!","success");
+  closeModal(); loadUsers();
+}
+
+async function deleteUser(id){
+  if(id===adminProfile.id){ showToast("Cannot delete your own account","error"); return; }
+  if(!confirm("Delete this user profile? This is irreversible.")) return;
+  var res = await db.from("profiles").delete().eq("id",id);
+  if(res.error){ showToast("Failed: "+res.error.message,"error"); return; }
+  showToast("User deleted","info"); loadUsers();
+}
+</script>
+</body>
+</html>
