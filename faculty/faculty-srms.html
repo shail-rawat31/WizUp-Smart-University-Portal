@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SRMS Requests – WizUP Faculty</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="faculty-shared.css"/>
+<style>
+.req-card{padding:18px 20px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(0,0,0,.2);transition:.25s;margin-bottom:12px;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.req-card:hover{border-color:rgba(229,56,59,.3);background:rgba(229,56,59,.04)}
+.req-card.pending{border-left:3px solid #fcd34d}
+.req-card.escalated{border-left:3px solid #7dd3fc}
+.req-type-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.req-id{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#8892b0;margin-bottom:3px}
+.req-title{font-size:14px;font-weight:700;margin-bottom:3px}
+.req-student{font-size:12px;color:#8892b0;margin-bottom:6px}
+.req-detail{font-size:12px;color:rgba(255,255,255,.65);line-height:1.5}
+.timeline-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.timeline-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.timeline-row:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+<header class="header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo"/>
+  <div class="h-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Search SRMS requests…"/></div>
+  <div class="h-actions">
+    <div id="clock" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;color:#e5383b;margin-right:6px">00:00</div>
+    <a href="faculty-dashboard.html" class="h-btn"><i class="fa-solid fa-house"></i></a>
+    <a href="faculty-notifications.html" class="h-btn"><i class="fa-solid fa-bell"></i></a>
+    <div class="user-profile"><div class="up-avatar" id="uAvatar">F</div><div class="up-info"><span class="up-name" id="uName">Faculty</span><span class="up-role">Faculty Hub</span></div></div>
+    <button class="h-btn" onclick="doSignOut()"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+
+<div class="main-container">
+  <aside class="sidebar">
+    <div class="sidebar-section open"><div class="sidebar-header">ATTENDANCE<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-attendance.html">Mark Attendance</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">ACADEMICS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-timetable.html">My Timetable</a><a href="faculty-marks.html">Internal Marks</a><a href="faculty-assignments.html">Assignments</a><a href="faculty-subjects.html">Course Materials</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">STUDENTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-students.html">Student Monitoring</a><a href="faculty-leave-approvals.html">Leave Approvals</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">INSIGHTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-analytics.html">Analytics</a><a href="faculty-srms.html" class="active">SRMS Requests</a></div></div>
+    <div class="sidebar-section"><div class="sidebar-header">PERSONAL<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-profile.html">My Profile</a><a href="faculty-leave.html">Apply Leave</a><a href="faculty-docs.html">Document Verify</a></div></div>
+  </aside>
+
+  <main class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h2 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;display:flex;align-items:center;gap:10px">
+        <i class="fa-solid fa-code-pull-request" style="color:#e5383b"></i> SRMS Request Management
+      </h2>
+      <a href="faculty-dashboard.html" style="color:#8892b0;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom:18px">
+      <div class="stat-card"><div class="stat-lbl">Total Requests</div><div class="stat-val" id="sc-total">—</div></div>
+      <div class="stat-card"><div class="stat-lbl">Pending</div><div class="stat-val" id="sc-pend" style="color:#fcd34d">—</div></div>
+      <div class="stat-card"><div class="stat-lbl">Resolved</div><div class="stat-val" id="sc-done" style="color:#86efac">—</div></div>
+      <div class="stat-card"><div class="stat-lbl">Escalated</div><div class="stat-val" id="sc-esc" style="color:#7dd3fc">—</div></div>
+    </div>
+
+    <div class="grid2">
+      <!-- Pending requests -->
+      <div class="card">
+        <div class="card-hd">
+          <h3><i class="fa-solid fa-clock" style="color:#fca5a5"></i> Pending Requests</h3>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-outline" onclick="filterReqs('all')">All</button>
+            <button class="btn btn-sm btn-outline" onclick="filterReqs('pending')">Pending</button>
+            <button class="btn btn-sm btn-outline" onclick="filterReqs('escalated')">Escalated</button>
+          </div>
+        </div>
+        <div class="card-bd" id="reqList">
+          <div style="text-align:center;padding:24px;color:#8892b0"><i class="fa-solid fa-spinner fa-spin" style="font-size:22px"></i></div>
+        </div>
+      </div>
+
+      <!-- Request details + timeline -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-timeline" style="color:#fca5a5"></i> Activity Timeline</h3></div>
+        <div class="card-bd">
+          <div style="margin-bottom:16px;padding:14px;background:rgba(229,56,59,.06);border:1px solid rgba(229,56,59,.2);border-radius:12px">
+            <div style="font-size:12px;font-weight:700;color:#fca5a5;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Instructions</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.6">Review each student SRMS request carefully. You can approve, escalate to HOD, or request more information. Escalation is for requests beyond faculty scope (e.g. fee waivers, department-level decisions).</div>
+          </div>
+          <div id="timeline">
+            <div class="timeline-row">
+              <div class="timeline-dot" style="background:#86efac"></div>
+              <div><div style="font-size:13px;font-weight:700;color:#fff">REQ-2001 Resolved</div><div style="font-size:11px;color:#8892b0">Arjun Sharma — Bonafide Certificate · Apr 3, 2026</div></div>
+            </div>
+            <div class="timeline-row">
+              <div class="timeline-dot" style="background:#7dd3fc"></div>
+              <div><div style="font-size:13px;font-weight:700;color:#fff">REQ-1998 Escalated to HOD</div><div style="font-size:11px;color:#8892b0">Priya Patel — Fee concession request · Apr 1, 2026</div></div>
+            </div>
+            <div class="timeline-row">
+              <div class="timeline-dot" style="background:#86efac"></div>
+              <div><div style="font-size:13px;font-weight:700;color:#fff">REQ-1995 Resolved</div><div style="font-size:11px;color:#8892b0">Rahul Nair — Transfer certificate · Mar 28, 2026</div></div>
+            </div>
+            <div class="timeline-row">
+              <div class="timeline-dot" style="background:#fca5a5"></div>
+              <div><div style="font-size:13px;font-weight:700;color:#fff">REQ-1990 Rejected</div><div style="font-size:11px;color:#8892b0">Sana Khan — Duplicate ID card (lost) · Mar 25, 2026</div></div>
+            </div>
+            <div class="timeline-row">
+              <div class="timeline-dot" style="background:#fcd34d"></div>
+              <div><div style="font-size:13px;font-weight:700;color:#fff">REQ-1988 Pending Review</div><div style="font-size:11px;color:#8892b0">Vikram Singh — Internship NOC · Mar 22, 2026</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-wrap"></div>
+
+<script src="faculty-shared.js"></script>
+<script>
+const SRMS_REQUESTS=[
+  {id:"REQ-2005",student:"Deepak Joshi",roll:"MCA203",type:"Bonafide Certificate",cat:"certificate",detail:"Needed for internship application at Infosys. Requires college letterhead with enrollment details.",priority:"high",status:"pending"},
+  {id:"REQ-2004",student:"Pooja Verma",roll:"MCA118",type:"Duplicate ID Card",cat:"id",detail:"Original ID card lost. FIR copy submitted.",priority:"normal",status:"pending"},
+  {id:"REQ-2003",student:"Aditya Rao",roll:"MCA211",type:"Internship NOC",cat:"noc",detail:"NOC required from department for 3-month industrial internship (June–August 2026).",priority:"high",status:"pending"},
+  {id:"REQ-2002",student:"Nisha Jain",roll:"MCA105",type:"Fee Concession Request",cat:"fee",detail:"Requesting partial fee waiver due to family financial hardship. Supporting documents attached.",priority:"urgent",status:"escalated"},
+  {id:"REQ-2001",student:"Ishaan Kapoor",roll:"MCA122",type:"Migration Certificate",cat:"certificate",detail:"Required for PG admission at Delhi University.",priority:"normal",status:"pending"},
+];
+
+const CAT_ICONS={certificate:"fa-solid fa-certificate",id:"fa-solid fa-id-card",noc:"fa-solid fa-file-signature",fee:"fa-solid fa-indian-rupee-sign",default:"fa-solid fa-file-lines"};
+const CAT_BG={certificate:"rgba(167,139,250,.15)",id:"rgba(56,189,248,.15)",noc:"rgba(34,197,94,.15)",fee:"rgba(245,158,11,.15)",default:"rgba(229,56,59,.15)"};
+const CAT_CLR={certificate:"#c4b5fd",id:"#7dd3fc",noc:"#86efac",fee:"#fcd34d",default:"#fca5a5"};
+const PRI_BADGE={urgent:"b-red",high:"b-amber",normal:"b-blue"};
+
+let activeFilter="all";
+
+document.addEventListener("DOMContentLoaded",async()=>{
+  await requireAuth(["faculty","hod"]);
+  updateStats();
+  renderReqs();
+});
+
+function updateStats(){
+  const pend=SRMS_REQUESTS.filter(r=>r.status==="pending").length;
+  const esc=SRMS_REQUESTS.filter(r=>r.status==="escalated").length;
+  document.getElementById("sc-total").textContent=SRMS_REQUESTS.length;
+  document.getElementById("sc-pend").textContent=pend;
+  document.getElementById("sc-done").textContent=3;
+  document.getElementById("sc-esc").textContent=esc;
+}
+
+function filterReqs(f){activeFilter=f;renderReqs();}
+
+function renderReqs(){
+  const filtered=activeFilter==="all"?SRMS_REQUESTS:SRMS_REQUESTS.filter(r=>r.status===activeFilter);
+  const el=document.getElementById("reqList");
+  el.innerHTML=filtered.map(r=>`
+  <div class="req-card ${r.status}" id="rc-${r.id}">
+    <div class="req-type-icon" style="background:${CAT_BG[r.cat]||CAT_BG.default}"><i class="${CAT_ICONS[r.cat]||CAT_ICONS.default}" style="color:${CAT_CLR[r.cat]||CAT_CLR.default}"></i></div>
+    <div style="flex:1;min-width:0">
+      <div class="req-id">${r.id}</div>
+      <div class="req-title">${r.type}</div>
+      <div class="req-student"><i class="fa-solid fa-user" style="margin-right:4px;opacity:.5"></i>${r.student} · ${r.roll}</div>
+      <div class="req-detail">${r.detail}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+        <span class="badge ${PRI_BADGE[r.priority]||"b-blue"}">${r.priority} priority</span>
+        <span class="badge b-${r.status==="escalated"?"blue":"amber"}">${r.status}</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+      ${r.status==="pending"?`
+      <button class="btn btn-sm btn-green" onclick="resolveReq('${r.id}')"><i class="fa-solid fa-check"></i> Resolve</button>
+      <button class="btn btn-sm" style="background:rgba(56,189,248,.12);color:#7dd3fc;border:1px solid rgba(56,189,248,.3);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter'" onclick="escalateReq('${r.id}')"><i class="fa-solid fa-arrow-up-right-dots"></i> Escalate</button>
+      `:`<span style="font-size:11px;color:#8892b0">Escalated to HOD</span>`}
+    </div>
+  </div>`).join("")||`<div style="text-align:center;padding:32px;color:#86efac"><i class="fa-solid fa-check-circle" style="font-size:28px;display:block;margin-bottom:10px;opacity:.5"></i>No ${activeFilter} requests</div>`;
+}
+
+function resolveReq(id){
+  const idx=SRMS_REQUESTS.findIndex(r=>r.id===id);
+  if(idx<0)return;
+  SRMS_REQUESTS.splice(idx,1);
+  updateStats();renderReqs();
+  showToast(`${id} marked as resolved`);
+}
+function escalateReq(id){
+  const req=SRMS_REQUESTS.find(r=>r.id===id);
+  if(!req)return;
+  req.status="escalated";
+  updateStats();renderReqs();
+  showToast(`${id} escalated to HOD`,"info");
+}
+</script>
+</body>
+</html>

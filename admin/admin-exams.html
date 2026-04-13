@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Exams & Grading – WizUP Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-shared.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="adm-header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="adm-logo"/>
+  <div><div class="adm-title">Exams & Grading</div><div class="adm-sub">View and manage marks across all subjects</div></div>
+  <div class="adm-spacer"></div>
+  <div class="adm-header-btns">
+    <a href="admin-dashboard.html" class="ico-btn"><i class="fa-solid fa-house"></i></a>
+    <div class="user-chip"><div class="user-avatar" id="userAvatar">A</div><div><div class="user-name" id="userName">Admin</div><div class="user-role">Super Admin</div></div></div>
+    <button class="ico-btn danger" onclick="doSignOut()"><i class="fa-solid fa-power-off"></i></button>
+  </div>
+</header>
+<div class="adm-wrap">
+  <aside class="adm-sidebar" id="sidebar"></aside>
+  <main class="adm-content">
+    <div class="pg-head">
+      <div><h1 class="pg-title"><i class="fa-solid fa-graduation-cap"></i>Exams & Grading</h1><p class="pg-sub">System-wide marks overview and grading configuration</p></div>
+      <button class="btn btn-ghost btn-sm" onclick="loadMarks()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(255,145,0,.15);color:#ff9100"><i class="fa-solid fa-file-lines"></i></div><div class="sc-val" id="sc-records">—</div><div class="sc-lbl">Total Mark Records</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(34,197,94,.15);color:#86efac"><i class="fa-solid fa-star"></i></div><div class="sc-val" id="sc-avg">—</div><div class="sc-lbl">Avg Score %</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(167,139,250,.15);color:#c4b5fd"><i class="fa-solid fa-trophy"></i></div><div class="sc-val" id="sc-top">—</div><div class="sc-lbl">Students > 75%</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(239,68,68,.15);color:#fca5a5"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="sc-val" id="sc-low">—</div><div class="sc-lbl">Students < 40%</div></div>
+    </div>
+
+    <!-- Grade Config -->
+    <div class="card">
+      <div class="card-hd"><h3><i class="fa-solid fa-sliders"></i> Grade Boundaries Configuration</h3>
+        <button class="btn btn-primary btn-sm" onclick="saveGrades()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+      </div>
+      <div class="card-bd">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">
+          <div class="form-group" style="margin:0"><label>O (Outstanding) ≥</label><input class="form-control" type="number" id="g-O" value="90" min="0" max="100"/></div>
+          <div class="form-group" style="margin:0"><label>A+ ≥</label><input class="form-control" type="number" id="g-Ap" value="80" min="0" max="100"/></div>
+          <div class="form-group" style="margin:0"><label>A ≥</label><input class="form-control" type="number" id="g-A" value="70" min="0" max="100"/></div>
+          <div class="form-group" style="margin:0"><label>B+ ≥</label><input class="form-control" type="number" id="g-Bp" value="60" min="0" max="100"/></div>
+          <div class="form-group" style="margin:0"><label>B ≥</label><input class="form-control" type="number" id="g-B" value="50" min="0" max="100"/></div>
+          <div class="form-group" style="margin:0"><label>C (Pass) ≥</label><input class="form-control" type="number" id="g-C" value="40" min="0" max="100"/></div>
+          <div class="form-group" style="margin:0"><label>F (Fail) Below</label><input class="form-control" type="number" id="g-F" value="40" min="0" max="100" readonly style="opacity:.6"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Marks Registry -->
+    <div class="card">
+      <div class="card-hd"><h3><i class="fa-solid fa-table-list"></i> Marks Registry</h3>
+        <div style="display:flex;gap:10px">
+          <select class="filter-sel" id="examTypeFilter" onchange="renderMarks()">
+            <option value="">All Exam Types</option>
+            <option value="mst_marks">MST Marks</option>
+            <option value="assignment_marks">Assignment</option>
+            <option value="attendance_marks">Attendance</option>
+            <option value="final">Final</option>
+          </select>
+          <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="markSearch" placeholder="Search student…" oninput="renderMarks()"/></div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;max-height:380px;overflow-y:auto">
+        <table class="data-table"><thead><tr><th>Student</th><th>Subject</th><th>Exam Type</th><th>Score</th><th>Max</th><th>%</th><th>Grade</th></tr></thead>
+        <tbody id="marksTable"><tr><td colspan="7" style="text-align:center;padding:24px;color:#555"><i class="fa-solid fa-spinner fa-spin"></i></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toastWrap"></div>
+<script src="admin-shared.js"></script>
+<script>
+document.getElementById("sidebar").innerHTML = SIDEBAR_HTML;
+var allMarks=[];
+
+window.onload = async function(){
+  var ok = await requireAdmin(); if(!ok) return;
+  initSidebar();
+  loadMarks();
+};
+
+function getGrade(pct){
+  if(pct>=90) return {g:"O",c:"b-purple"};
+  if(pct>=80) return {g:"A+",c:"b-blue"};
+  if(pct>=70) return {g:"A",c:"b-green"};
+  if(pct>=60) return {g:"B+",c:"b-green"};
+  if(pct>=50) return {g:"B",c:"b-amber"};
+  if(pct>=40) return {g:"C",c:"b-amber"};
+  return {g:"F",c:"b-red"};
+}
+
+async function loadMarks(){
+  var r = await db.from("marks").select("*,student:student_id(full_name),subject:subject_id(name,subject_code)").order("created_at",{ascending:false}).limit(200);
+  allMarks = r.data||[];
+
+  if(allMarks.length){
+    var withPct = allMarks.filter(function(m){ return m.max_marks>0; });
+    var avg = withPct.reduce(function(s,m){ return s+(m.marks_obtained/m.max_marks*100); },0)/(withPct.length||1);
+    document.getElementById("sc-avg").textContent = Math.round(avg)+"%";
+
+    // Group by student to get per-student average
+    var byStudent={};
+    withPct.forEach(function(m){
+      var sid = m.student_id;
+      if(!byStudent[sid]) byStudent[sid]={sum:0,cnt:0};
+      byStudent[sid].sum += m.marks_obtained/m.max_marks*100;
+      byStudent[sid].cnt++;
+    });
+    var avgs = Object.values(byStudent).map(function(x){ return x.sum/x.cnt; });
+    document.getElementById("sc-top").textContent = avgs.filter(function(a){ return a>=75; }).length;
+    document.getElementById("sc-low").textContent = avgs.filter(function(a){ return a<40; }).length;
+  } else {
+    document.getElementById("sc-avg").textContent="N/A";
+    document.getElementById("sc-top").textContent="0";
+    document.getElementById("sc-low").textContent="0";
+  }
+  document.getElementById("sc-records").textContent = allMarks.length;
+  renderMarks();
+}
+
+function renderMarks(){
+  var tf = document.getElementById("examTypeFilter").value;
+  var q = document.getElementById("markSearch").value.toLowerCase();
+  var list = allMarks.filter(function(m){
+    if(tf && m.exam_type!==tf) return false;
+    var s = Array.isArray(m.student)?m.student[0]:m.student;
+    if(q && !(s?s.full_name:"").toLowerCase().includes(q)) return false;
+    return true;
+  });
+  var tb = document.getElementById("marksTable");
+  if(!list.length){ tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#555">No marks found</td></tr>'; return; }
+  var ETLBL={ mst_marks:"MST", assignment_marks:"Assignment", attendance_marks:"Attendance", final:"Final" };
+  tb.innerHTML = list.map(function(m){
+    var st = Array.isArray(m.student)?m.student[0]:m.student;
+    var sub = Array.isArray(m.subject)?m.subject[0]:m.subject;
+    var pct = m.max_marks>0 ? Math.round(m.marks_obtained/m.max_marks*100) : 0;
+    var grd = getGrade(pct);
+    return '<tr>'
+      +'<td style="font-weight:600">'+(st?st.full_name:"—")+'</td>'
+      +'<td style="font-size:12px;color:#94a3b8">'+(sub?sub.name:"—")+'</td>'
+      +'<td><span class="badge b-orange">'+(ETLBL[m.exam_type]||m.exam_type)+'</span></td>'
+      +'<td style="font-weight:700;color:#fff">'+m.marks_obtained+'</td>'
+      +'<td style="color:#94a3b8">'+m.max_marks+'</td>'
+      +'<td style="font-weight:700">'+(m.max_marks>0?pct+"%":"—")+'</td>'
+      +'<td><span class="badge '+grd.c+'">'+grd.g+'</span></td>'
+      +'</tr>';
+  }).join("");
+}
+
+function saveGrades(){ showToast("Grade boundaries saved (session)","success"); }
+</script>
+</body>
+</html>

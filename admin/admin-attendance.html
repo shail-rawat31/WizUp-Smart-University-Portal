@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Attendance Overrides – WizUP Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="admin-shared.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="adm-header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="adm-logo"/>
+  <div><div class="adm-title">Attendance Overrides</div><div class="adm-sub">Manually adjust and audit student attendance records</div></div>
+  <div class="adm-spacer"></div>
+  <div class="adm-header-btns">
+    <a href="admin-dashboard.html" class="ico-btn"><i class="fa-solid fa-house"></i></a>
+    <div class="user-chip"><div class="user-avatar" id="userAvatar">A</div><div><div class="user-name" id="userName">Admin</div><div class="user-role">Super Admin</div></div></div>
+    <button class="ico-btn danger" onclick="doSignOut()"><i class="fa-solid fa-power-off"></i></button>
+  </div>
+</header>
+<div class="adm-wrap">
+  <aside class="adm-sidebar" id="sidebar"></aside>
+  <main class="adm-content">
+    <div class="pg-head">
+      <div><h1 class="pg-title"><i class="fa-solid fa-clock-rotate-left"></i>Attendance Overrides</h1><p class="pg-sub">Search a student and manually mark attendance for any date</p></div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(255,145,0,.15);color:#ff9100"><i class="fa-solid fa-calendar-check"></i></div><div class="sc-val" id="sc-total">—</div><div class="sc-lbl">Total Records</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(34,197,94,.15);color:#86efac"><i class="fa-solid fa-check"></i></div><div class="sc-val" id="sc-present">—</div><div class="sc-lbl">Present</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(239,68,68,.15);color:#fca5a5"><i class="fa-solid fa-xmark"></i></div><div class="sc-val" id="sc-absent">—</div><div class="sc-lbl">Absent</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(245,158,11,.15);color:#fcd34d"><i class="fa-solid fa-umbrella-beach"></i></div><div class="sc-val" id="sc-leave">—</div><div class="sc-lbl">On Leave</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:20px;align-items:start">
+      <!-- Override Form -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-pen-to-square"></i> Manual Override</h3></div>
+        <div class="card-bd" style="display:flex;flex-direction:column;gap:14px">
+          <div class="form-group" style="margin:0"><label>Select Student</label>
+            <select class="form-control" id="ovStudent"><option value="">— Search & Select —</option></select>
+          </div>
+          <div class="form-group" style="margin:0"><label>Select Subject</label>
+            <select class="form-control" id="ovSubject"><option value="">— Select Subject —</option></select>
+          </div>
+          <div class="form-group" style="margin:0"><label>Date</label>
+            <input class="form-control" type="date" id="ovDate"/>
+          </div>
+          <div class="form-group" style="margin:0"><label>Override Status</label>
+            <select class="form-control" id="ovStatus">
+              <option value="present">Present</option>
+              <option value="absent">Absent</option>
+              <option value="leave">Leave</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" onclick="applyOverride()">
+            <i class="fa-solid fa-pen"></i> Apply Override
+          </button>
+          <p style="font-size:11px;color:#555;text-align:center">This will upsert the attendance record for the selected date.</p>
+        </div>
+      </div>
+
+      <!-- Recent Attendance -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-table"></i> Recent Attendance Records</h3>
+          <div style="display:flex;gap:8px">
+            <select class="filter-sel" id="attFilter" onchange="renderAtt()"><option value="">All Status</option><option value="present">Present</option><option value="absent">Absent</option><option value="leave">Leave</option></select>
+            <button class="btn btn-ghost btn-sm" onclick="loadAtt()"><i class="fa-solid fa-rotate-right"></i></button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
+          <table class="data-table"><thead><tr><th>Student</th><th>Subject</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="attTable"><tr><td colspan="4" style="text-align:center;padding:24px;color:#555"><i class="fa-solid fa-spinner fa-spin"></i></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toastWrap"></div>
+<script src="admin-shared.js"></script>
+<script>
+document.getElementById("sidebar").innerHTML = SIDEBAR_HTML;
+var students=[], subjects=[], attRecords=[];
+
+window.onload = async function(){
+  var ok = await requireAdmin(); if(!ok) return;
+  initSidebar();
+  document.getElementById("ovDate").value = new Date().toISOString().split("T")[0];
+  await loadFormData();
+  loadAtt();
+};
+
+async function loadFormData(){
+  var [pr, sr] = await Promise.all([
+    db.from("profiles").select("id,full_name,role").eq("role","student"),
+    db.from("subjects").select("id,name,subject_code")
+  ]);
+  students = pr.data||[]; subjects = sr.data||[];
+  var ss = document.getElementById("ovStudent");
+  ss.innerHTML = '<option value="">— Select Student —</option>';
+  students.forEach(function(s){ ss.innerHTML += '<option value="'+s.id+'">'+s.full_name+'</option>'; });
+  var su = document.getElementById("ovSubject");
+  su.innerHTML = '<option value="">— Select Subject —</option>';
+  subjects.forEach(function(s){ su.innerHTML += '<option value="'+s.id+'">'+(s.subject_code?"["+s.subject_code+"] ":"")+s.name+'</option>'; });
+}
+
+async function loadAtt(){
+  var r = await db.from("attendance").select("*,student:student_id(full_name),subject:subject_id(name,subject_code)").order("date",{ascending:false}).limit(100);
+  attRecords = r.data||[];
+  var SB = { present:"b-green", absent:"b-red", leave:"b-amber" };
+  document.getElementById("sc-total").textContent = attRecords.length;
+  document.getElementById("sc-present").textContent = attRecords.filter(function(a){ return a.status==="present"; }).length;
+  document.getElementById("sc-absent").textContent = attRecords.filter(function(a){ return a.status==="absent"; }).length;
+  document.getElementById("sc-leave").textContent = attRecords.filter(function(a){ return a.status==="leave"; }).length;
+  renderAtt();
+}
+
+function renderAtt(){
+  var sf = document.getElementById("attFilter").value;
+  var list = sf ? attRecords.filter(function(a){ return a.status===sf; }) : attRecords;
+  var SB = { present:"b-green", absent:"b-red", leave:"b-amber" };
+  var tb = document.getElementById("attTable");
+  if(!list.length){ tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:24px;color:#555">No records</td></tr>'; return; }
+  tb.innerHTML = list.slice(0,60).map(function(a){
+    var st = Array.isArray(a.student)?a.student[0]:a.student;
+    var sub = Array.isArray(a.subject)?a.subject[0]:a.subject;
+    return '<tr>'
+      +'<td style="font-weight:600">'+(st?st.full_name:"—")+'</td>'
+      +'<td style="font-size:12px;color:#94a3b8">'+(sub?(sub.subject_code?"["+sub.subject_code+"] ":"")+sub.name:"—")+'</td>'
+      +'<td style="font-size:12px">'+fmtDate(a.date)+'</td>'
+      +'<td><span class="badge '+(SB[a.status]||"b-gray")+'">'+a.status+'</span></td>'
+      +'</tr>';
+  }).join("");
+}
+
+async function applyOverride(){
+  var sid = document.getElementById("ovStudent").value;
+  var subid = document.getElementById("ovSubject").value;
+  var date = document.getElementById("ovDate").value;
+  var status = document.getElementById("ovStatus").value;
+  if(!sid||!subid||!date){ showToast("Please fill all fields","error"); return; }
+
+  var res = await db.from("attendance").upsert({
+    student_id:sid, subject_id:subid, date, status, marked_by:adminProfile.id
+  },{onConflict:"student_id,subject_id,date"});
+
+  if(res.error){ showToast("Override failed: "+res.error.message,"error"); return; }
+  showToast("Attendance override applied!","success");
+  loadAtt();
+}
+</script>
+</body>
+</html>

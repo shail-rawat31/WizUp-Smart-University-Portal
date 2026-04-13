@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Leave Approvals – WizUP HOD</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:#0096C7;--primary-glow:rgba(0,150,199,.25);--sidebar-bg:rgba(0,10,25,.97);--card-bg:rgba(0,15,30,.7);--blur:blur(24px)}
+body{font-family:'Inter',sans-serif;background:url("../assets/images/bg1.jpg") center/cover no-repeat fixed;background-color:#03060f;color:#e2e8f0;min-height:100vh;display:none;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(0,150,199,.4);border-radius:10px}
+
+/* HEADER */
+.header{height:70px;padding:0 30px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,150,199,.2);background:rgba(2,5,20,.8);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:0 4px 30px rgba(0,0,0,.6);position:sticky;top:0;z-index:1000}
+.logo{width:44px;filter:drop-shadow(0 0 8px rgba(0,150,199,.35))}
+.h-search{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);padding:9px 20px;border-radius:99px;width:380px;transition:.3s}
+.h-search:focus-within{border-color:rgba(0,150,199,.5);box-shadow:0 0 20px rgba(0,150,199,.12);width:420px}
+.h-search input{background:transparent;border:none;outline:none;color:#fff;font-family:'Inter',sans-serif;font-size:13px;width:100%}
+.h-search input::placeholder{color:rgba(255,255,255,.35)}
+.h-search i{color:rgba(255,255,255,.35);font-size:14px}
+.h-actions{display:flex;align-items:center;gap:14px}
+.h-btn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;transition:.2s;text-decoration:none}
+.h-btn:hover{background:rgba(0,150,199,.18);border-color:rgba(0,150,199,.45);color:#fff;transform:translateY(-2px)}
+.user-profile{display:flex;align-items:center;gap:12px;padding:6px 18px 6px 7px;background:rgba(255,255,255,.05);border-radius:99px;border:1px solid rgba(0,150,199,.28);cursor:pointer;transition:.3s;text-decoration:none}
+.user-profile:hover{background:rgba(0,150,199,.12)}
+.up-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0096C7,#00c4e8);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:14px;color:#fff;box-shadow:0 0 14px rgba(0,150,199,.45)}
+.up-info{display:flex;flex-direction:column;line-height:1.2}
+.up-name{font-size:13px;font-weight:700;color:#fff}
+.up-role{font-size:10px;color:#7dd3fc;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+
+/* LAYOUT */
+.main-container{display:flex;min-height:calc(100vh - 70px)}
+
+/* SIDEBAR */
+.sidebar{width:225px;background:var(--sidebar-bg);flex-shrink:0;padding:12px 0;border-right:1px solid rgba(0,150,199,.15);position:sticky;top:70px;height:calc(100vh - 70px);overflow-y:auto;align-self:flex-start}
+.sidebar-section{margin-bottom:2px}
+.sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;cursor:pointer;color:#94a3b8;background:rgba(255,255,255,.03);border-left:3px solid transparent;transition:.15s}
+.sidebar-header:hover{background:rgba(0,150,199,.08)}
+.sidebar-section.open .sidebar-header{border-left-color:#0096C7;color:#e2e8f0}
+.sidebar-header .ch{font-size:10px;transition:transform .2s}
+.sidebar-section.open .sidebar-header .ch{transform:rotate(180deg)}
+.sidebar-menu{display:none;padding:4px 0}
+.sidebar-section.open .sidebar-menu{display:block}
+.sidebar-menu a{display:flex;align-items:center;gap:8px;padding:8px 16px 8px 22px;color:#94a3b8;text-decoration:none;font-size:12px;transition:.15s}
+.sidebar-menu a::before{content:"›";color:#0096C7;font-size:14px;font-weight:800}
+.sidebar-menu a:hover{background:rgba(0,150,199,.08);color:#e2e8f0}
+.sidebar-menu a.active{background:rgba(0,150,199,.15);color:#7dd3fc;font-weight:600}
+
+/* CONTENT */
+.content{flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;min-width:0}
+
+/* CARDS */
+.card{background:var(--card-bg);border:1px solid rgba(0,150,199,.18);border-radius:16px;backdrop-filter:blur(18px);overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.card-hd{padding:14px 20px;border-bottom:1px solid rgba(0,150,199,.12);background:rgba(0,10,25,.4);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-hd h3{font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;margin:0;display:flex;align-items:center;gap:9px}
+.card-bd{padding:0}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.stat-card{padding:18px 20px;border:1px solid rgba(0,150,199,.18);border-radius:14px;background:rgba(0,15,35,.6);backdrop-filter:blur(12px);transition:.2s}
+.stat-card:hover{transform:translateY(-2px);border-color:rgba(0,150,199,.35)}
+.stat-lbl{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.stat-val{font-family:'Outfit',sans-serif;font-size:32px;font-weight:900;line-height:1;margin-bottom:3px}
+.stat-sub{font-size:11px;color:#94a3b8}
+
+/* TABS */
+.tab-strip{display:flex;align-items:center;gap:0;border-bottom:1px solid rgba(0,150,199,.15);background:rgba(0,5,15,.5);padding:0 20px}
+.tab-btn{padding:13px 22px;font-size:13px;font-weight:700;color:#94a3b8;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;transition:.2s;display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;white-space:nowrap}
+.tab-btn:hover{color:#e2e8f0;background:rgba(0,150,199,.06)}
+.tab-btn.active{color:#7dd3fc;border-bottom-color:#0096C7}
+.tab-count{padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800}
+
+/* FILTER BAR */
+.filter-bar{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);flex-wrap:wrap}
+.filter-pill{padding:6px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.09);background:none;color:#94a3b8;cursor:pointer;font-size:12px;font-weight:700;transition:.2s;font-family:'Inter',sans-serif}
+.filter-pill:hover{border-color:rgba(0,150,199,.4);color:#7dd3fc}
+.filter-pill.active{background:rgba(0,150,199,.15);border-color:rgba(0,150,199,.4);color:#7dd3fc}
+.search-input{padding:7px 14px;border-radius:8px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);color:#fff;font-family:'Inter',sans-serif;font-size:12px;outline:none;transition:.2s;margin-left:auto;width:220px}
+.search-input:focus{border-color:rgba(0,150,199,.5)}
+
+/* LEAVE TABLE */
+.leave-list{padding:0}
+.leave-row{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.05);transition:.2s}
+.leave-row:last-child{border-bottom:none}
+.leave-row:hover{background:rgba(0,150,199,.04)}
+.leave-row.faculty-row{border-left:3px solid rgba(0,150,199,.5)}
+.leave-row.student-row{border-left:3px solid rgba(167,139,250,.5)}
+.leave-row.urgent{animation:pulse-border 2s ease-in-out infinite}
+@keyframes pulse-border{0%,100%{box-shadow:inset 3px 0 0 rgba(245,158,11,.4)}50%{box-shadow:inset 3px 0 0 rgba(245,158,11,.8)}}
+.lr-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;flex-shrink:0}
+.avatar-faculty{background:rgba(0,150,199,.2);color:#7dd3fc;box-shadow:0 0 12px rgba(0,150,199,.2)}
+.avatar-student{background:rgba(167,139,250,.2);color:#c4b5fd;box-shadow:0 0 12px rgba(167,139,250,.2)}
+.lr-info{min-width:0}
+.lr-name{font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lr-detail{font-size:12px;color:#8892b0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px}
+.lr-reason{font-size:11px;color:rgba(255,255,255,.45);margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lr-meta{text-align:right;min-width:110px;flex-shrink:0}
+.lr-dates{font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:4px}
+.lr-days{font-size:11px;color:#8892b0}
+.lr-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;min-width:90px}
+.act-btn{padding:6px 14px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px}
+.act-approve{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+.act-approve:hover{background:rgba(34,197,94,.28);transform:translateY(-1px)}
+.act-reject{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.25)}
+.act-reject:hover{background:rgba(239,68,68,.25);transform:translateY(-1px)}
+.act-done{font-size:11px;color:rgba(255,255,255,.25);font-style:italic}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;gap:4px}
+.b-pending{background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
+.b-approved{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+.b-rejected{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.b-casual{background:rgba(34,197,94,.12);color:#86efac;border:1px solid rgba(34,197,94,.25)}
+.b-medical{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.25)}
+.b-duty{background:rgba(56,189,248,.12);color:#7dd3fc;border:1px solid rgba(56,189,248,.25)}
+.b-faculty{background:rgba(0,150,199,.15);color:#7dd3fc;border:1px solid rgba(0,150,199,.3)}
+.b-student{background:rgba(167,139,250,.15);color:#c4b5fd;border:1px solid rgba(167,139,250,.3)}
+.b-hod{background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px 24px;color:rgba(148,163,184,.45)}
+.empty i{font-size:36px;display:block;margin-bottom:14px;opacity:.3}
+.empty p{font-size:13px}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:2000}
+.modal-ov.open{display:flex}
+.modal{background:#040d1a;border:1px solid rgba(0,150,199,.3);border-radius:20px;padding:28px;width:460px;max-width:94vw}
+.modal h3{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px}
+.modal p{font-size:13px;color:#8892b0;margin-bottom:16px}
+.modal textarea{width:100%;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.1);color:#fff;font-family:'Inter',sans-serif;font-size:13px;border-radius:10px;padding:11px 14px;outline:none;resize:vertical;min-height:80px;transition:.2s}
+.modal textarea:focus{border-color:#0096C7;box-shadow:0 0 0 3px rgba(0,150,199,.15)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.btn{padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s;border:none;display:inline-flex;align-items:center;gap:7px}
+.btn-primary{background:#0096C7;color:#fff}
+.btn-primary:hover{background:#0074a8;transform:translateY(-1px)}
+.btn-outline{background:none;border:1px solid rgba(255,255,255,.12);color:#fff}
+.btn-outline:hover{border-color:rgba(0,150,199,.5);background:rgba(0,150,199,.08)}
+.btn-danger{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.btn-danger:hover{background:rgba(239,68,68,.28)}
+
+/* TOAST */
+#toast-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.4);transform:translateX(120%);transition:transform .3s;display:flex;align-items:center;gap:10px}
+.toast.show{transform:translateX(0)}
+.toast.success{background:rgba(34,197,94,.9);border:1px solid rgba(34,197,94,.5)}
+.toast.error{background:rgba(239,68,68,.9);border:1px solid rgba(239,68,68,.5)}
+.toast.info{background:rgba(56,189,248,.9);border:1px solid rgba(56,189,248,.5)}
+
+@media(max-width:900px){.sidebar{display:none}.filter-bar .search-input{width:100%;margin-left:0}}
+@media(max-width:700px){.leave-row{grid-template-columns:auto 1fr}.lr-meta,.lr-actions{display:none}}
+</style>
+</head>
+<body>
+<header class="header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo"/>
+  <div class="h-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="globalSearch" placeholder="Search by name, type…" oninput="onSearch(this.value)"/></div>
+  <div class="h-actions">
+    <div id="clock" style="font-family:'Outfit';font-weight:800;font-size:17px;color:#0096C7;margin-right:4px">00:00</div>
+    <a href="hod-dashboard.html" class="h-btn" title="Dashboard"><i class="fa-solid fa-house"></i></a>
+    <a href="hod-notifications.html" class="h-btn" title="Notifications"><i class="fa-solid fa-bell"></i></a>
+    <div class="user-profile">
+      <div class="up-avatar" id="uAvatar">H</div>
+      <div class="up-info"><span class="up-name" id="uName">HOD</span><span class="up-role">Dept Executive</span></div>
+    </div>
+    <button class="h-btn" onclick="doSignOut()" title="Sign Out"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+
+<div class="main-container">
+  <aside class="sidebar">
+    <div class="sidebar-section open">
+      <div class="sidebar-header">ANALYTICS<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu"><a href="hod-analytics.html">Department Perf.</a><a href="hod-analytics.html">Subject Heatmaps</a></div>
+    </div>
+    <div class="sidebar-section open">
+      <div class="sidebar-header">APPROVALS<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu"><a href="hod-leaves.html" class="active">Leave Approvals</a><a href="hod-docs.html">Document Approvals</a><a href="hod-timetable.html">Course Plans</a></div>
+    </div>
+    <div class="sidebar-section open">
+      <div class="sidebar-header">DEPARTMENT<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu"><a href="hod-faculty-monitor.html">Faculty Monitoring</a><a href="hod-students.html">Student Management</a><a href="hod-announcements.html">Announcements</a></div>
+    </div>
+    <div class="sidebar-section open">
+      <div class="sidebar-header">COMMUNITY<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu"><a href="hod-srms.html">Complaints / SRMS</a><a href="hod-notifications.html">Notifications</a></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-header">ACCOUNT<i class="fa-solid fa-chevron-down ch"></i></div>
+      <div class="sidebar-menu"><a href="javascript:doSignOut()">Sign Out</a></div>
+    </div>
+  </aside>
+
+  <main class="content">
+    <!-- Page title -->
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h1 style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;display:flex;align-items:center;gap:12px"><i class="fa-solid fa-clipboard-list" style="color:#0096C7"></i> Leave Approvals</h1>
+        <p style="font-size:13px;color:#94a3b8;margin-top:4px">Manage all departmental leave requests — faculty and student categories separated</p>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="loadAll()" style="padding:9px 18px;font-size:12px"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-lbl"><i class="fa-solid fa-hourglass-half" style="color:#fcd34d"></i> Total Pending</div>
+        <div class="stat-val" id="sc-pend" style="color:#fcd34d">—</div>
+        <div class="stat-sub">Awaiting decision</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl"><i class="fa-solid fa-chalkboard-user" style="color:#7dd3fc"></i> Faculty Pending</div>
+        <div class="stat-val" id="sc-fac" style="color:#7dd3fc">—</div>
+        <div class="stat-sub">From teaching staff</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl"><i class="fa-solid fa-user-graduate" style="color:#c4b5fd"></i> Student Pending</div>
+        <div class="stat-val" id="sc-stu" style="color:#c4b5fd">—</div>
+        <div class="stat-sub">From enrolled students</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl"><i class="fa-solid fa-circle-check" style="color:#86efac"></i> Approved Today</div>
+        <div class="stat-val" id="sc-today" style="color:#86efac">—</div>
+        <div class="stat-sub">Resolved today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl"><i class="fa-solid fa-file-medical" style="color:#fca5a5"></i> Medical Pending</div>
+        <div class="stat-val" id="sc-med" style="color:#fca5a5">—</div>
+        <div class="stat-sub">Require certificate check</div>
+      </div>
+    </div>
+
+    <!-- Main leave management card -->
+    <div class="card">
+      <!-- Tabs: Faculty | Student | All History -->
+      <div class="tab-strip">
+        <button class="tab-btn active" id="tab-faculty" onclick="switchTab('faculty')">
+          <i class="fa-solid fa-chalkboard-user"></i> Faculty Leaves
+          <span class="tab-count b-faculty" id="tc-faculty">0</span>
+        </button>
+        <button class="tab-btn" id="tab-student" onclick="switchTab('student')">
+          <i class="fa-solid fa-user-graduate"></i> Student Leaves
+          <span class="tab-count b-student" id="tc-student">0</span>
+        </button>
+        <button class="tab-btn" id="tab-history" onclick="switchTab('history')">
+          <i class="fa-solid fa-clock-rotate-left"></i> History
+          <span class="tab-count" style="background:rgba(255,255,255,.08);color:#94a3b8" id="tc-history">0</span>
+        </button>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <button class="filter-pill active" id="fp-all" onclick="setTypeFilter('all',this)">All Types</button>
+        <button class="filter-pill" id="fp-casual" onclick="setTypeFilter('casual',this)">
+          <i class="fa-solid fa-umbrella-beach" style="color:#86efac;margin-right:4px"></i>Casual
+        </button>
+        <button class="filter-pill" id="fp-medical" onclick="setTypeFilter('medical',this)">
+          <i class="fa-solid fa-kit-medical" style="color:#fca5a5;margin-right:4px"></i>Medical
+        </button>
+        <button class="filter-pill" id="fp-duty" onclick="setTypeFilter('duty',this)">
+          <i class="fa-solid fa-briefcase" style="color:#7dd3fc;margin-right:4px"></i>Duty
+        </button>
+        <input type="text" class="search-input" id="tabSearch" placeholder="Search name or reason…" oninput="onSearch(this.value)"/>
+      </div>
+
+      <!-- Leave list -->
+      <div class="leave-list" id="leaveList">
+        <div class="empty"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading leave registry…</p></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Reject reason modal -->
+<div class="modal-ov" id="rejectModal">
+  <div class="modal">
+    <h3><i class="fa-solid fa-ban" style="color:#fca5a5;margin-right:8px"></i> Reject Leave Request</h3>
+    <p>Provide a rejection reason. This will be stored with the request record.</p>
+    <textarea id="rejectReason" placeholder="e.g. Insufficient leave balance / Clash with exam duty…"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmReject()"><i class="fa-solid fa-ban"></i> Confirm Reject</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-wrap"></div>
+
+<script>
+var SUPABASE_URL = "https://vqxhbfbpqwpdbmgtdcik.supabase.co";
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxeGhiZmJwcXdwZGJtZ3RkY2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTY1MTMsImV4cCI6MjA4NzM5MjUxM30.U9wuwWRDsUqKef93fl0C1DLu9l_hQ5zKMT9KhOt24xE";
+var db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+var currentHOD = null;
+var allLeaves = [];       // pending leaves
+var histLeaves = [];      // approved + rejected
+var activeTab = "faculty";
+var activeTypeFilter = "all";
+var searchQ = "";
+var rejectTargetId = null;
+
+// ─── INIT ───────────────────────────────────────────────────
+window.onload = async function() {
+  // Clock
+  var clk = document.getElementById("clock");
+  function tick(){ clk.textContent = new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit"}); }
+  setInterval(tick,1000); tick();
+
+  // Sidebar toggles
+  document.querySelectorAll(".sidebar-header").forEach(function(h){
+    h.addEventListener("click", function(){ h.parentElement.classList.toggle("open"); });
+  });
+
+  // Auth
+  var res = await db.auth.getSession();
+  var session = res.data.session;
+  if(!session){ window.location.href="hod-signin.html"; return; }
+  var profRes = await db.from("profiles").select("*").eq("id", session.user.id).single();
+  var profile = profRes.data;
+  if(!profile || profile.role !== "hod"){ window.location.href="../index.html"; return; }
+  currentHOD = profile;
+  document.body.style.display = "block";
+  var name = profile.full_name || "HOD";
+  document.getElementById("uName").textContent = name.split(" ")[0];
+  document.getElementById("uAvatar").textContent = name[0].toUpperCase();
+
+  await loadAll();
+
+  // Real-time subscription
+  db.channel("hod_leaves")
+    .on("postgres_changes", {event:"*", schema:"public", table:"leave_requests"}, function(){
+      loadAll();
+    })
+    .subscribe();
+};
+
+async function loadAll() {
+  // Fetch pending
+  var pendRes = await db.from("leave_requests")
+    .select("*, profiles:requested_by(full_name,role,roll_no,employee_code)")
+    .eq("status","pending")
+    .order("created_at",{ascending:false});
+
+  // Fetch history (approved/rejected, last 60)
+  var histRes = await db.from("leave_requests")
+    .select("*, profiles:requested_by(full_name,role,roll_no,employee_code)")
+    .in("status",["approved","rejected"])
+    .order("created_at",{ascending:false})
+    .limit(60);
+
+  allLeaves = (pendRes.data || []).map(normalize);
+  histLeaves = (histRes.data || []).map(normalize);
+
+  updateStats();
+  updateTabCounts();
+  renderCurrentTab();
+}
+
+function normalize(l) {
+  var prof = Array.isArray(l.profiles) ? l.profiles[0] : l.profiles;
+  return {
+    id: l.id,
+    name: prof ? prof.full_name : "Unknown",
+    role: prof ? prof.role : "unknown",
+    roll: prof ? (prof.roll_no || prof.employee_code || "—") : "—",
+    type: (l.type||"casual").toLowerCase(),
+    reason: l.reason || "",
+    start: l.start_date,
+    end: l.end_date,
+    days: l.days_count || 1,
+    status: l.status,
+    medical_required: l.medical_required,
+    file_url: l.file_url || null,
+    file_name: l.file_name || null,
+    created: l.created_at
+  };
+}
+
+function updateStats() {
+  var todayStr = new Date().toISOString().split("T")[0];
+  var facultyPend = allLeaves.filter(function(l){ return l.role==="faculty"||l.role==="hod"; });
+  var studentPend = allLeaves.filter(function(l){ return l.role==="student"; });
+  var medPend = allLeaves.filter(function(l){ return l.type==="medical"; });
+  var todayApproved = histLeaves.filter(function(l){ return l.status==="approved" && (l.created||"").startsWith(todayStr); });
+
+  document.getElementById("sc-pend").textContent = allLeaves.length;
+  document.getElementById("sc-fac").textContent = facultyPend.length;
+  document.getElementById("sc-stu").textContent = studentPend.length;
+  document.getElementById("sc-today").textContent = todayApproved.length;
+  document.getElementById("sc-med").textContent = medPend.length;
+}
+
+function updateTabCounts() {
+  var fac = allLeaves.filter(function(l){ return l.role==="faculty"||l.role==="hod"; });
+  var stu = allLeaves.filter(function(l){ return l.role==="student"; });
+  document.getElementById("tc-faculty").textContent = fac.length;
+  document.getElementById("tc-student").textContent = stu.length;
+  document.getElementById("tc-history").textContent = histLeaves.length;
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.remove("active"); });
+  document.getElementById("tab-"+tab).classList.add("active");
+  renderCurrentTab();
+}
+
+function setTypeFilter(type, btn) {
+  activeTypeFilter = type;
+  document.querySelectorAll(".filter-pill").forEach(function(b){ b.classList.remove("active"); });
+  btn.classList.add("active");
+  renderCurrentTab();
+}
+
+function onSearch(q) {
+  searchQ = q.toLowerCase();
+  document.getElementById("globalSearch").value = q;
+  document.getElementById("tabSearch").value = q;
+  renderCurrentTab();
+}
+
+function renderCurrentTab() {
+  var source;
+  if(activeTab==="faculty") source = allLeaves.filter(function(l){ return l.role==="faculty"||l.role==="hod"; });
+  else if(activeTab==="student") source = allLeaves.filter(function(l){ return l.role==="student"; });
+  else source = histLeaves;
+
+  if(activeTypeFilter!=="all") source = source.filter(function(l){ return l.type===activeTypeFilter; });
+  if(searchQ) source = source.filter(function(l){
+    return l.name.toLowerCase().includes(searchQ) || l.reason.toLowerCase().includes(searchQ) || l.roll.toLowerCase().includes(searchQ);
+  });
+
+  renderLeaveList(source, activeTab==="history");
+}
+
+function renderLeaveList(list, isHistory) {
+  var el = document.getElementById("leaveList");
+  if(!list.length) {
+    el.innerHTML = '<div class="empty"><i class="fa-solid fa-calendar-check"></i><p>'+(isHistory?"No historical records found":"No pending requests in this category")+'</p></div>';
+    return;
+  }
+
+  var TBADGE = {casual:"b-casual",medical:"b-medical",duty:"b-duty"};
+  var RCOLORS = {faculty:"#7dd3fc",student:"#c4b5fd",hod:"#fcd34d"};
+
+  el.innerHTML = list.map(function(l){
+    var isFaculty = l.role==="faculty"||l.role==="hod";
+    var rowClass = isFaculty ? "leave-row faculty-row" : "leave-row student-row";
+    if(!isHistory && l.type==="medical") rowClass += " urgent";
+    var avatarClass = isFaculty ? "lr-avatar avatar-faculty" : "lr-avatar avatar-student";
+    var roleBadge = l.role==="hod" ? "b-hod" : (isFaculty ? "b-faculty" : "b-student");
+    var roleLabel = l.role==="hod" ? "HOD" : (isFaculty ? "Faculty" : "Student");
+    var dFrom = l.start ? new Date(l.start).toLocaleDateString("en-IN",{day:"2-digit",month:"short"}) : "—";
+    var dTo = l.end ? new Date(l.end).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "—";
+    var created = l.created ? new Date(l.created).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "";
+
+    var statusBadge = l.status==="approved"?"b-approved":l.status==="rejected"?"b-rejected":"b-pending";
+
+    // Certificate attachment indicator
+    var certHtml = "";
+    if (l.file_url) {
+      certHtml = '<a href="'+l.file_url+'" target="_blank" '
+        +'style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:4px 10px;'
+        +'border-radius:6px;border:1px solid rgba(239,68,68,.35);background:rgba(239,68,68,.1);'
+        +'color:#fca5a5;font-size:10px;font-weight:800;text-decoration:none;text-transform:uppercase;letter-spacing:.4px">'
+        +'<i class="fa-solid fa-file-medical"></i> View Certificate</a>';
+    } else if (l.medical_required) {
+      certHtml = '<span style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;'
+        +'font-size:10px;font-weight:700;color:#fcd34d">'
+        +'<i class="fa-solid fa-triangle-exclamation"></i> No certificate yet</span>';
+    }
+
+    var actionHtml;
+    if(isHistory) {
+      actionHtml = '<div style="text-align:right">'
+        +'<span class="badge '+statusBadge+'">'+l.status+'</span>'
+        +'<div style="font-size:10px;color:#8892b0;margin-top:5px">'+created+'</div>'
+        +(l.file_url ? '<a href="'+l.file_url+'" target="_blank" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;color:#7dd3fc;font-size:10px;font-weight:700;text-decoration:none"><i class="fa-solid fa-paperclip"></i> Certificate</a>' : '')
+        +'</div>';
+    } else {
+      actionHtml = '<div class="lr-actions">'
+        +(l.file_url ? '<a href="'+l.file_url+'" target="_blank" class="act-btn" style="background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.3);text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700"><i class="fa-solid fa-file-medical"></i> Certificate</a>' : '')
+        +'<button class="act-btn act-approve" onclick="approveLeave(\''+l.id+'\')"><i class="fa-solid fa-check"></i> Approve</button>'
+        +'<button class="act-btn act-reject" onclick="openReject(\''+l.id+'\')"><i class="fa-solid fa-xmark"></i> Reject</button>'
+        +'</div>';
+    }
+
+    return '<div class="'+rowClass+'">'
+      +'<div class="'+avatarClass+'">'+l.name[0].toUpperCase()+'</div>'
+      +'<div class="lr-info">'
+      +'<div class="lr-name">'+l.name+'</div>'
+      +'<div class="lr-detail">'
+      +'<span class="badge '+roleBadge+'">'+roleLabel+'</span>'
+      +'<span class="badge '+(TBADGE[l.type]||"b-casual")+'">'+l.type+'</span>'
+      +(l.roll && l.roll!=="—" ? '<span style="font-size:11px;color:#8892b0">'+l.roll+'</span>' : '')
+      +'</div>'
+      +'<div class="lr-reason">'+l.reason+'</div>'
+      +certHtml
+      +'</div>'
+      +'<div class="lr-meta">'
+      +'<div class="lr-dates">'+dFrom+' → '+dTo+'</div>'
+      +'<div class="lr-days">'+l.days+' day'+(l.days!==1?"s":"")+'</div>'
+      +'</div>'
+      +'<div style="flex-shrink:0">'+actionHtml+'</div>'
+      +'</div>';
+  }).join("");
+}
+
+// ─── ACTIONS ───────────────────────────────────────────────
+async function approveLeave(id) {
+  var res = await db.from("leave_requests").update({status:"approved", reviewed_by:currentHOD.id}).eq("id",id);
+  if(res.error){ showToast("Failed: "+res.error.message,"error"); return; }
+  showToast("Leave request approved ✓","success");
+  loadAll();
+}
+
+function openReject(id) {
+  rejectTargetId = id;
+  document.getElementById("rejectReason").value = "";
+  document.getElementById("rejectModal").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("rejectModal").classList.remove("open");
+  rejectTargetId = null;
+}
+
+async function confirmReject() {
+  var reason = document.getElementById("rejectReason").value.trim();
+  if(!reason){ showToast("Please enter a rejection reason","error"); return; }
+
+  var res1 = await db.from("leave_requests").select("reason").eq("id", rejectTargetId).single();
+  var origReason = res1.data ? res1.data.reason : "";
+  var newReason = origReason + " | REJECTED BY HOD: " + reason;
+
+  var res = await db.from("leave_requests").update({
+    status: "rejected",
+    reason: newReason,
+    reviewed_by: currentHOD.id
+  }).eq("id", rejectTargetId);
+
+  if(res.error){ showToast("Failed: "+res.error.message,"error"); return; }
+  showToast("Leave request rejected","info");
+  closeModal();
+  loadAll();
+}
+
+// ─── HELPERS ───────────────────────────────────────────────
+function doSignOut() {
+  db.auth.signOut().then(function(){ window.location.href="../index.html"; });
+}
+
+function showToast(msg, type) {
+  type = type||"success";
+  var wrap = document.getElementById("toast-wrap");
+  var t = document.createElement("div");
+  var icons = {success:"✓",error:"✗",info:"ℹ"};
+  t.className = "toast "+type;
+  t.innerHTML = "<span>"+(icons[type]||"ℹ")+"</span>"+msg;
+  wrap.appendChild(t);
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  setTimeout(function(){ t.classList.remove("show"); setTimeout(function(){ t.remove(); },350); },3500);
+}
+</script>
+</body>
+</html>

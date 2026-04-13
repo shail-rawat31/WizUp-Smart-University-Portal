@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Student Leave Approvals – WizUP Faculty</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="faculty-shared.css"/>
+<style>
+.leave-card{padding:20px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(0,0,0,.22);transition:.25s;margin-bottom:14px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.leave-card:hover{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.14)}
+.leave-card.pending{border-left:4px solid #f59e0b}
+.leave-card.approved{border-left:4px solid #22c55e;opacity:.75}
+.leave-card.rejected{border-left:4px solid #ef4444;opacity:.65}
+.lc-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;flex-shrink:0}
+.lc-name{font-size:15px;font-weight:700;margin-bottom:2px}
+.lc-roll{font-size:11px;color:#8892b0}
+.lc-meta{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0;font-size:12px;color:rgba(255,255,255,.65)}
+.lc-meta span{display:flex;align-items:center;gap:5px}
+.lc-reason{font-size:13px;color:rgba(255,255,255,.75);padding:10px 14px;background:rgba(255,255,255,.04);border-radius:10px;border-left:3px solid rgba(255,255,255,.15);line-height:1.5;margin-top:6px;font-style:italic}
+.action-btns{display:flex;flex-direction:column;gap:7px;flex-shrink:0;align-self:flex-start}
+.doc-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25);color:#7dd3fc;font-size:10px;font-weight:700;margin-top:5px;cursor:pointer;transition:.2s}
+.doc-chip:hover{background:rgba(56,189,248,.2)}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
+.f-tab{padding:7px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.09);background:none;color:#8892b0;cursor:pointer;font-size:12px;font-weight:700;transition:.2s;font-family:'Inter',sans-serif}
+.f-tab.active{background:rgba(229,56,59,.12);border-color:rgba(229,56,59,.35);color:#fca5a5}
+.leave-type-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700}
+.lt-general{background:rgba(56,189,248,.12);color:#7dd3fc;border:1px solid rgba(56,189,248,.25)}
+.lt-medical{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.25)}
+.lt-duty{background:rgba(167,139,250,.12);color:#c4b5fd;border:1px solid rgba(167,139,250,.25)}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:500}
+.modal-bg.open{display:flex}
+.modal-box{background:#111;border:1px solid rgba(229,56,59,.25);border-radius:20px;padding:28px;width:460px;max-width:94vw;max-height:90vh;overflow-y:auto}
+.modal-box h3{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px}
+.modal-box p{font-size:12px;color:#8892b0;margin-bottom:18px}
+</style>
+</head>
+<body>
+<header class="header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo"/>
+  <div class="h-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Search student leaves…" oninput="searchLeaves(this.value)"/></div>
+  <div class="h-actions">
+    <div id="clock" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;color:#e5383b;margin-right:6px">00:00</div>
+    <a href="faculty-dashboard.html" class="h-btn"><i class="fa-solid fa-house"></i></a>
+    <a href="faculty-notifications.html" class="h-btn"><i class="fa-solid fa-bell"></i></a>
+    <div class="user-profile"><div class="up-avatar" id="uAvatar">F</div><div class="up-info"><span class="up-name" id="uName">Faculty</span><span class="up-role">Faculty Hub</span></div></div>
+    <button class="h-btn" onclick="doSignOut()"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+
+<div class="main-container">
+  <aside class="sidebar">
+    <div class="sidebar-section open"><div class="sidebar-header">ATTENDANCE<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-attendance.html">Mark Attendance</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">ACADEMICS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-timetable.html">My Timetable</a><a href="faculty-marks.html">Internal Marks</a><a href="faculty-assignments.html">Assignments</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">STUDENTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-students.html">Student Monitoring</a><a href="faculty-leave-approvals.html" class="active">Leave Approvals</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">INSIGHTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-analytics.html">Analytics</a><a href="faculty-srms.html">SRMS</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">PERSONAL<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-profile.html">My Profile</a><a href="faculty-leave.html">Apply Leave</a></div></div>
+  </aside>
+
+  <main class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h2 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <i class="fa-solid fa-file-signature" style="color:#e5383b"></i> Student Leave Approvals
+        </h2>
+        <p style="font-size:12px;color:#8892b0">Approve or reject student leave requests. Medical leaves require certificate verification.</p>
+      </div>
+      <a href="faculty-dashboard.html" style="color:#8892b0;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;flex-shrink:0"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-clock" style="color:#fcd34d"></i> Pending</div><div class="stat-val" id="sc-pend" style="color:#fcd34d">—</div><div class="stat-sub">Awaiting your action</div></div>
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-check" style="color:#86efac"></i> Approved</div><div class="stat-val" id="sc-appr" style="color:#86efac">—</div><div class="stat-sub">This semester</div></div>
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-xmark" style="color:#fca5a5"></i> Rejected</div><div class="stat-val" id="sc-rej" style="color:#fca5a5">—</div><div class="stat-sub">This semester</div></div>
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-notes-medical" style="color:#7dd3fc"></i> Medical</div><div class="stat-val" id="sc-med" style="color:#7dd3fc">—</div><div class="stat-sub">Require certificate</div></div>
+    </div>
+
+    <!-- Leave type legend -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px;background:rgba(0,0,0,.2);border-radius:12px;border:1px solid rgba(255,255,255,.06)">
+      <span style="font-size:12px;color:#8892b0;font-weight:700;align-self:center">Leave Types:</span>
+      <span class="leave-type-pill lt-general"><i class="fa-solid fa-calendar-day"></i> General / Casual</span>
+      <span class="leave-type-pill lt-medical"><i class="fa-solid fa-notes-medical"></i> Medical Leave</span>
+      <span class="leave-type-pill lt-duty"><i class="fa-solid fa-award"></i> Duty Leave</span>
+      <span style="margin-left:auto;font-size:11px;color:#8892b0;align-self:center"><i class="fa-solid fa-info-circle" style="margin-right:4px"></i>Medical leaves must attach doctor certificate</span>
+    </div>
+
+    <!-- Filter + Bulk action -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div class="filter-bar" style="margin-bottom:0">
+        <button class="f-tab active" onclick="setFilter('all',this)">All (<span id="c-all">0</span>)</button>
+        <button class="f-tab" onclick="setFilter('pending',this)">Pending (<span id="c-pend">0</span>)</button>
+        <button class="f-tab" onclick="setFilter('approved',this)">Approved (<span id="c-appr">0</span>)</button>
+        <button class="f-tab" onclick="setFilter('rejected',this)">Rejected (<span id="c-rej">0</span>)</button>
+        <button class="f-tab" onclick="setFilter('medical',this)">Medical (<span id="c-med">0</span>)</button>
+      </div>
+      <button class="btn btn-green btn-sm" onclick="approveAll()" id="bulkBtn" style="display:none">
+        <i class="fa-solid fa-check-double"></i> Approve All Pending
+      </button>
+    </div>
+
+    <!-- Main list -->
+    <div id="leaveList">
+      <div style="text-align:center;padding:40px;color:#8892b0"><i class="fa-solid fa-spinner fa-spin" style="font-size:28px"></i></div>
+    </div>
+
+    <!-- All history table -->
+    <div class="card">
+      <div class="card-hd"><h3><i class="fa-solid fa-history" style="color:#fca5a5"></i> Full Leave History</h3></div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>Student</th><th>Type</th><th>Dates</th><th>Days</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="historyBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#8892b0">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Reject modal -->
+<div class="modal-bg" id="rejectModal">
+  <div class="modal-box">
+    <h3 style="color:#fca5a5"><i class="fa-solid fa-xmark-circle" style="margin-right:8px"></i>Reject Leave Request</h3>
+    <p>This will notify the student. Please provide a brief reason for rejection.</p>
+    <input type="hidden" id="rejectId"/>
+    <div class="form-group">
+      <label>Rejection Reason</label>
+      <textarea id="rejectReason" rows="3" placeholder="e.g. Insufficient documentation. Please reapply with medical certificate."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-outline" onclick="closeRejectModal()">Cancel</button>
+      <button class="btn btn-red" onclick="confirmReject()"><i class="fa-solid fa-xmark"></i> Confirm Rejection</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-wrap"></div>
+
+<script src="faculty-shared.js"></script>
+<script>
+let leaves = [];
+let activeFilter = 'all';
+
+const DEMO_LEAVES = [
+  {id:'LV001',studentName:'Arjun Sharma',rollNo:'MCA201',type:'General',start_date:'2026-04-10',end_date:'2026-04-11',reason:'Personal work - family function at home town.',status:'pending',days:2,hasMedDoc:false},
+  {id:'LV002',studentName:'Priya Patel',rollNo:'MCA202',type:'Medical',start_date:'2026-04-08',end_date:'2026-04-10',reason:'Suffering from viral fever and throat infection. Doctor has advised rest for 3 days.',status:'pending',days:3,hasMedDoc:true},
+  {id:'LV003',studentName:'Rohit Kumar',rollNo:'MCA203',type:'Duty',start_date:'2026-04-18',end_date:'2026-04-19',reason:'Selected for Inter-university Badminton Tournament at Agra University.',status:'pending',days:2,hasMedDoc:false},
+  {id:'LV004',studentName:'Sneha Gupta',rollNo:'MCA204',type:'Medical',start_date:'2026-04-05',end_date:'2026-04-07',reason:'Surgery follow-up appointment at AIIMS Delhi.',status:'pending',days:3,hasMedDoc:true},
+  {id:'LV005',studentName:'Vikram Singh',rollNo:'MCA205',type:'General',start_date:'2026-03-28',end_date:'2026-03-28',reason:'Elder sibling\'s wedding ceremony.',status:'approved',days:1,hasMedDoc:false},
+  {id:'LV006',studentName:'Ananya Mehta',rollNo:'MCA206',type:'Medical',start_date:'2026-03-20',end_date:'2026-03-22',reason:'Dengue fever — hospitalised.',status:'approved',days:3,hasMedDoc:true},
+  {id:'LV007',studentName:'Kiran Reddy',rollNo:'MCA207',type:'General',start_date:'2026-03-15',end_date:'2026-03-15',reason:'Travel to native place for family emergency.',status:'rejected',days:1,hasMedDoc:false},
+  {id:'LV008',studentName:'Deepak Joshi',rollNo:'MCA208',type:'Duty',start_date:'2026-04-22',end_date:'2026-04-24',reason:'NSS camp participation — mandatory for NSS volunteers.',status:'pending',days:3,hasMedDoc:false},
+];
+
+const TYPE_CLASS = {General:'lt-general', Medical:'lt-medical', Duty:'lt-duty'};
+const TYPE_ICON = {General:'fa-calendar-day', Medical:'fa-notes-medical', Duty:'fa-award'};
+const AVATAR_COLORS = ['rgba(229,56,59,.2)','rgba(56,189,248,.2)','rgba(34,197,94,.2)','rgba(167,139,250,.2)','rgba(245,158,11,.2)'];
+const AVATAR_TEXT = ['#fca5a5','#7dd3fc','#86efac','#c4b5fd','#fcd34d'];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await requireAuth(['faculty', 'hod']);
+
+  // Try Supabase first
+  const { data, error } = await db.from('leave_requests')
+    .select('*, profiles:requested_by(full_name, roll_no)')
+    .order('created_at', { ascending: false });
+
+  if (data && data.length) {
+    leaves = data.map(l => ({
+      ...l,
+      studentName: l.profiles?.full_name || 'Unknown',
+      rollNo: l.profiles?.roll_no || 'N/A',
+      days: Math.ceil((new Date(l.end_date) - new Date(l.start_date)) / 86400000) + 1,
+      hasMedDoc: l.type === 'Medical',
+    }));
+  } else {
+    leaves = [...DEMO_LEAVES];
+  }
+
+  render();
+});
+
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.f-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function searchLeaves(q) { render(q); }
+
+function render(q = '') {
+  updateStats();
+  let filtered = leaves;
+  if (activeFilter === 'medical') filtered = filtered.filter(l => l.type === 'Medical');
+  else if (activeFilter !== 'all') filtered = filtered.filter(l => l.status === activeFilter);
+  if (q) filtered = filtered.filter(l =>
+    (l.studentName || '').toLowerCase().includes(q.toLowerCase()) ||
+    (l.rollNo || '').toLowerCase().includes(q.toLowerCase())
+  );
+
+  const pending = filtered.filter(l => l.status === 'pending');
+  document.getElementById('bulkBtn').style.display = pending.length > 1 ? 'inline-flex' : 'none';
+
+  const el = document.getElementById('leaveList');
+  el.innerHTML = filtered.map((l, i) => {
+    const ci = i % 5;
+    const isPending = l.status === 'pending';
+    return `
+    <div class="leave-card ${l.status}" id="lc-${l.id}">
+      <div class="lc-avatar" style="background:${AVATAR_COLORS[ci]};color:${AVATAR_TEXT[ci]}">${(l.studentName||'S')[0]}</div>
+      <div style="flex:1;min-width:0">
+        <div class="lc-name">${l.studentName}
+          <span class="leave-type-pill ${TYPE_CLASS[l.type]||'lt-general'}" style="margin-left:8px;vertical-align:middle">
+            <i class="fa-solid ${TYPE_ICON[l.type]||'fa-calendar'}"></i> ${l.type}
+          </span>
+          ${l.hasMedDoc ? '<span class="doc-chip" onclick="showToast(\'Opening certificate...\',\'info\')"><i class="fa-solid fa-file-medical"></i> Med. Certificate</span>' : ''}
+        </div>
+        <div class="lc-roll">${l.rollNo}</div>
+        <div class="lc-meta">
+          <span><i class="fa-regular fa-calendar" style="color:#fca5a5"></i>${fmtDate(l.start_date)}</span>
+          <span style="color:#8892b0">→</span>
+          <span><i class="fa-regular fa-calendar-check" style="color:#86efac"></i>${fmtDate(l.end_date)}</span>
+          <span><i class="fa-solid fa-clock" style="color:#fcd34d"></i>${l.days} day${l.days>1?'s':''}</span>
+        </div>
+        <div class="lc-reason">${l.reason}</div>
+      </div>
+      <div class="action-btns">
+        ${isPending ? `
+          <button class="btn btn-green btn-sm" onclick="approveLeave('${l.id}')"><i class="fa-solid fa-check"></i> Approve</button>
+          <button class="btn btn-red btn-sm" onclick="openRejectModal('${l.id}')"><i class="fa-solid fa-xmark"></i> Reject</button>
+          <button class="btn btn-sm btn-outline" onclick="showToast('Clarification sent to student','info')" style="font-size:11px"><i class="fa-regular fa-comment"></i> Query</button>
+        ` : `
+          <span class="badge ${l.status==='approved'?'b-green':'b-red'}" style="padding:6px 12px">
+            <i class="fa-solid ${l.status==='approved'?'fa-check':'fa-xmark'}" style="margin-right:4px"></i>
+            ${l.status === 'approved' ? 'Approved' : 'Rejected'}
+          </span>
+          ${l.status==='rejected'?'<button class="btn btn-sm btn-outline" style="margin-top:6px" onclick="approveLeave(\''+l.id+'\')">Reconsider</button>':''}
+        `}
+      </div>
+    </div>`;
+  }).join('') || `<div style="text-align:center;padding:40px;color:#8892b0">
+    <i class="fa-solid fa-inbox" style="font-size:36px;display:block;margin-bottom:14px;opacity:.3"></i>
+    No ${activeFilter !== 'all' ? activeFilter : ''} leave requests found
+  </div>`;
+
+  // History table
+  document.getElementById('historyBody').innerHTML = leaves.map(l => `
+  <tr>
+    <td style="font-weight:600">${l.studentName}<br><span style="font-size:11px;color:#8892b0">${l.rollNo}</span></td>
+    <td><span class="leave-type-pill ${TYPE_CLASS[l.type]||'lt-general'}" style="font-size:10px"><i class="fa-solid ${TYPE_ICON[l.type]||'fa-calendar'}"></i> ${l.type}</span></td>
+    <td style="font-size:12px">${fmtDate(l.start_date)}<br>→ ${fmtDate(l.end_date)}</td>
+    <td style="text-align:center;font-weight:700">${l.days}d</td>
+    <td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.reason}">${l.reason}</td>
+    <td><span class="badge b-${l.status==='approved'?'green':l.status==='rejected'?'red':'amber'}">${l.status}</span></td>
+    <td>
+      ${l.status==='pending'
+        ? `<div style="display:flex;gap:4px">
+            <button class="btn btn-sm btn-green" onclick="approveLeave('${l.id}')">✓</button>
+            <button class="btn btn-sm btn-red" onclick="openRejectModal('${l.id}')">✗</button>
+           </div>`
+        : `<span style="font-size:11px;color:#8892b0">—</span>`
+      }
+    </td>
+  </tr>`).join('');
+}
+
+function updateStats() {
+  const pend = leaves.filter(l => l.status === 'pending').length;
+  const appr = leaves.filter(l => l.status === 'approved').length;
+  const rej  = leaves.filter(l => l.status === 'rejected').length;
+  const med  = leaves.filter(l => l.type === 'Medical').length;
+  document.getElementById('sc-pend').textContent = pend;
+  document.getElementById('sc-appr').textContent = appr;
+  document.getElementById('sc-rej').textContent  = rej;
+  document.getElementById('sc-med').textContent  = med;
+  document.getElementById('c-all').textContent   = leaves.length;
+  document.getElementById('c-pend').textContent  = pend;
+  document.getElementById('c-appr').textContent  = appr;
+  document.getElementById('c-rej').textContent   = rej;
+  document.getElementById('c-med').textContent   = med;
+}
+
+async function approveLeave(id) {
+  const l = leaves.find(x => x.id === id); if (!l) return;
+  l.status = 'approved';
+  await db.from('leave_requests').update({ status: 'approved' }).eq('id', id);
+  showToast(`✓ Leave approved for ${l.studentName}`, 'success');
+  render();
+}
+
+function openRejectModal(id) {
+  document.getElementById('rejectId').value = id;
+  document.getElementById('rejectReason').value = '';
+  document.getElementById('rejectModal').classList.add('open');
+}
+function closeRejectModal() { document.getElementById('rejectModal').classList.remove('open'); }
+
+async function confirmReject() {
+  const id = document.getElementById('rejectId').value;
+  const reason = document.getElementById('rejectReason').value.trim();
+  if (!reason) { showToast('Please enter a rejection reason', 'error'); return; }
+  const l = leaves.find(x => x.id === id); if (!l) return;
+  l.status = 'rejected';
+  await db.from('leave_requests').update({ status: 'rejected', rejection_reason: reason }).eq('id', id);
+  closeRejectModal();
+  showToast(`Leave rejected — student notified`, 'info');
+  render();
+}
+
+function approveAll() {
+  const pending = leaves.filter(l => l.status === 'pending');
+  if (!pending.length) { showToast('No pending requests', 'info'); return; }
+  pending.forEach(l => approveLeave(l.id));
+  showToast(`${pending.length} leaves approved`, 'success');
+}
+</script>
+</body>
+</html>

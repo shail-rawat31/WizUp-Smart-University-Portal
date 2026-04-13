@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Student Wellbeing (CSW) – WizUP</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--card:rgba(20,20,25,.72);--border:rgba(229,56,59,.15);--b2:rgba(255,255,255,.09);--muted:#8892b0;--brand:#e5383b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;font-family:'Inter',sans-serif;background:url("../assets/images/bg1.jpg") center/cover no-repeat fixed;background-color:#050505;color:#fff}
+.overlay{position:fixed;inset:0;background:radial-gradient(circle at 70% 40%,rgba(0,0,0,.12),rgba(0,0,0,.82));pointer-events:none;z-index:0}
+.topbar{display:flex;align-items:center;gap:14px;padding:12px 24px;background:rgba(0,0,0,.82);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.logo{width:44px;height:44px;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.1);overflow:hidden}
+.logo img{width:75%}
+.t-title h1{margin:0;font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;letter-spacing:1px}
+.t-title p{margin:0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.spacer{flex:1}
+.nav-link{color:#fca5a5;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;transition:.2s}
+.nav-link:hover{color:#fff}
+.container{width:min(1100px,95vw);margin:30px auto;position:relative;z-index:1}
+.page-title{font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;margin-bottom:6px}
+.page-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);box-shadow:0 10px 30px rgba(0,0,0,.3);overflow:hidden;margin-bottom:20px}
+.card-hd{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;background:rgba(229,56,59,.05)}
+.card-hd h2{font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.card-bd{padding:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.resource-card{padding:20px;border:1px solid var(--b2);border-radius:12px;background:rgba(0,0,0,.25);transition:.25s}
+.resource-card:hover{border-color:rgba(229,56,59,.35);background:rgba(229,56,59,.05);transform:translateY(-2px)}
+.res-icon{font-size:28px;margin-bottom:12px;display:block}
+.res-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;margin-bottom:6px}
+.res-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px}
+.btn{background:var(--brand);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px;font-family:'Inter',sans-serif}
+.btn:hover{background:#b21f2d}
+.btn.soft{background:rgba(255,255,255,.07);border:1px solid var(--b2);color:#fff}
+.btn.soft:hover{background:rgba(255,255,255,.12)}
+.mood-grid{display:flex;gap:10px;justify-content:center;margin:16px 0}
+.mood-btn{width:56px;height:56px;border-radius:50%;font-size:26px;border:2px solid transparent;background:rgba(255,255,255,.07);cursor:pointer;transition:.25s;display:flex;align-items:center;justify-content:center}
+.mood-btn:hover{transform:scale(1.15);border-color:rgba(229,56,59,.4)}
+.mood-btn.selected{border-color:var(--brand);background:rgba(229,56,59,.2)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;margin-bottom:6px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.form-group select,.form-group textarea{width:100%;padding:10px 13px;border-radius:10px;border:1px solid var(--b2);background:rgba(0,0,0,.45);color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:.2s}
+.form-group select:focus,.form-group textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(229,56,59,.15)}
+.form-group select option{background:#111}
+.counsellor-card{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--b2);border-radius:10px;margin-bottom:10px;background:rgba(0,0,0,.25);transition:.2s}
+.counsellor-card:hover{border-color:rgba(229,56,59,.3)}
+.coun-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0;font-family:'Outfit',sans-serif}
+.coun-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.coun-role{font-size:11px;color:var(--muted)}
+.tips-list{display:grid;gap:10px}
+.tip-item{display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid var(--b2);border-radius:10px;background:rgba(0,0,0,.2)}
+.tip-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.tip-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.tip-body{font-size:12px;color:var(--muted);line-height:1.5}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="overlay"></div>
+<div class="topbar">
+  <div class="logo"><img src="../assets/images/LOGO1.png" alt="WizUP"/></div>
+  <div class="t-title"><h1>Student Wellbeing</h1><p>CSW — Centre for Student Welfare</p></div>
+  <div class="spacer"></div>
+  <a href="student-dashboard.html" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+</div>
+
+<div class="container">
+  <h2 class="page-title">Student Wellbeing Centre</h2>
+  <p class="page-sub">Your mental health and personal wellbeing matters. We're here to help — confidentially.</p>
+
+  <!-- Mood Check-in -->
+  <div class="card">
+    <div class="card-hd"><h2><i class="fa-solid fa-heart-pulse" style="color:#fca5a5"></i>Daily Mood Check-in</h2><span style="font-size:11px;color:var(--muted)">Anonymous</span></div>
+    <div class="card-bd" style="text-align:center">
+      <div style="font-size:14px;color:var(--muted);margin-bottom:8px">How are you feeling today?</div>
+      <div class="mood-grid" id="moodGrid">
+        <div class="mood-btn" onclick="selectMood(0)" title="Very Bad">😔</div>
+        <div class="mood-btn" onclick="selectMood(1)" title="Bad">😕</div>
+        <div class="mood-btn" onclick="selectMood(2)" title="Okay">😐</div>
+        <div class="mood-btn" onclick="selectMood(3)" title="Good">😊</div>
+        <div class="mood-btn" onclick="selectMood(4)" title="Great">😄</div>
+      </div>
+      <div id="moodMessage" style="font-size:13px;color:var(--muted);min-height:20px"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <!-- Appointment booking -->
+    <div class="card">
+      <div class="card-hd"><h2><i class="fa-solid fa-calendar-plus" style="color:#fca5a5"></i>Book Counselling Session</h2></div>
+      <div class="card-bd">
+        <div class="form-group"><label>Preferred Counsellor</label><select id="counsellorSel">
+          <option>Dr. Meera Krishnan (General Counsellor)</option>
+          <option>Dr. Rahul Joshi (Academic Stress)</option>
+          <option>Ms. Priya Nair (Career Anxiety)</option>
+          <option>No preference — first available</option>
+        </select></div>
+        <div class="form-group"><label>Session Type</label><select id="sessionType">
+          <option>In-person at CSW Office</option>
+          <option>Online (Video call)</option>
+          <option>Anonymous (text-based only)</option>
+        </select></div>
+        <div class="form-group"><label>Concern Area</label><select id="concernArea">
+          <option>Academic pressure / exams</option>
+          <option>Personal / family issues</option>
+          <option>Social anxiety</option>
+          <option>Career & future worries</option>
+          <option>Relationship issues</option>
+          <option>Sleep / health issues</option>
+          <option>Just want to talk</option>
+        </select></div>
+        <div class="form-group"><label>Message (optional)</label><textarea id="counsellingNote" rows="2" placeholder="Briefly describe what you'd like to discuss…"></textarea></div>
+        <button class="btn" style="width:100%;justify-content:center;margin-top:4px" onclick="bookSession()"><i class="fa-solid fa-calendar-check"></i> Book Session</button>
+      </div>
+    </div>
+
+    <!-- Counsellors -->
+    <div class="card">
+      <div class="card-hd"><h2><i class="fa-solid fa-users" style="color:#fca5a5"></i>Our Counsellors</h2></div>
+      <div class="card-bd">
+        ${[
+          {name:'Dr. Meera Krishnan',role:'General Counsellor · Mon–Fri 10am–5pm',init:'MK',bg:'rgba(229,56,59,.2)',tc:'#fca5a5'},
+          {name:'Dr. Rahul Joshi',role:'Academic Stress · Tue & Thu 2–6pm',init:'RJ',bg:'rgba(56,189,248,.2)',tc:'#7dd3fc'},
+          {name:'Ms. Priya Nair',role:'Career Anxiety · Wed & Fri 11am–4pm',init:'PN',bg:'rgba(167,139,250,.2)',tc:'#c4b5fd'},
+          {name:'Dr. Arun Thomas',role:'Crisis Support · Available 24×7',init:'AT',bg:'rgba(34,197,94,.2)',tc:'#86efac'},
+        ].map(c=>`<div class="counsellor-card">
+          <div class="coun-avatar" style="background:${c.bg};color:${c.tc}">${c.init}</div>
+          <div><div class="coun-name">${c.name}</div><div class="coun-role">${c.role}</div></div>
+        </div>`).join('')}
+        <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">All sessions are completely confidential. Your identity is never shared without consent.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resources -->
+  <div class="card">
+    <div class="card-hd"><h2><i class="fa-solid fa-hand-holding-heart" style="color:#fca5a5"></i>Self-Help Resources</h2></div>
+    <div class="card-bd">
+      <div class="grid3">
+        ${[
+          {emoji:'🧘',title:'Stress Management',desc:'Guided breathing exercises and mindfulness techniques for exam stress and anxiety.'},
+          {emoji:'😴',title:'Sleep Hygiene',desc:'Tips for improving sleep quality — crucial for academic performance and mood.'},
+          {emoji:'🏃',title:'Exercise & Movement',desc:'Simple 10-minute routines to boost energy and reduce anxiety between study sessions.'},
+          {emoji:'📝',title:'Journaling Prompts',desc:'Reflective writing prompts to process emotions, set goals and build self-awareness.'},
+          {emoji:'🤝',title:'Peer Support Groups',desc:'Connect with student-run support circles. Meetings every Tuesday & Thursday at 5 PM.'},
+          {emoji:'📞',title:'Crisis Helplines',desc:'iCall: 9152987821 · Vandrevala: 1860-2662-345 · iMHANS: 011-4052-5252'},
+        ].map(r=>`<div class="resource-card">
+          <span class="res-icon">${r.emoji}</span>
+          <div class="res-title">${r.title}</div>
+          <div class="res-desc">${r.desc}</div>
+          <button class="btn soft" style="font-size:11px;padding:7px 12px"><i class="fa-solid fa-arrow-right"></i> Explore</button>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <!-- Academic Wellness Tips -->
+  <div class="card">
+    <div class="card-hd"><h2><i class="fa-solid fa-lightbulb" style="color:#fca5a5"></i>Academic Wellness Tips</h2></div>
+    <div class="card-bd">
+      <div class="tips-list">
+        ${[
+          {icon:'🎯',title:'Break large tasks into micro-goals',body:'Overwhelm is the enemy of action. Split a 10-page assignment into 3 pages per day.'},
+          {icon:'⏱️',title:'Use the Pomodoro technique',body:'25 minutes of focused study + 5 minute break = more productive than 2 hours of distracted studying.'},
+          {icon:'🚫',title:'Say no to comparison',body:'Your classmates highlight their wins, not their struggles. Focus on your own growth curve.'},
+          {icon:'📱',title:'Digital detox before bed',body:'Phones keep your brain alert. Put it down 30 minutes before sleep for deeper rest.'},
+        ].map(t=>`<div class="tip-item"><div class="tip-icon">${t.icon}</div><div><div class="tip-title">${t.title}</div><div class="tip-body">${t.body}</div></div></div>`).join('')}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MOODS=['That sounds really tough. Consider reaching out to a counsellor — you don\'t have to face this alone.','Rough days happen. Try a short walk or speak to someone you trust.','A neutral day — that\'s okay too. Check in with yourself tonight.','Nice! Keep up the positive momentum. Rest well tonight.','Amazing! Carry that energy forward and share it with others. 🌟'];
+let selectedMood=null;
+function selectMood(i){
+  selectedMood=i;
+  document.querySelectorAll('.mood-btn').forEach((b,j)=>b.classList.toggle('selected',j===i));
+  document.getElementById('moodMessage').textContent=MOODS[i];
+  localStorage.setItem('wizup.todayMood',JSON.stringify({mood:i,date:new Date().toDateString()}));
+}
+// Restore today's mood
+try{const m=JSON.parse(localStorage.getItem('wizup.todayMood'));if(m&&m.date===new Date().toDateString())selectMood(m.mood);}catch{}
+
+function bookSession(){
+  const note=document.getElementById('counsellingNote').value.trim();
+  const counsellor=document.getElementById('counsellorSel').value;
+  alert(`Session request submitted!\n\nCounsellor: ${counsellor}\nType: ${document.getElementById('sessionType').value}\nConcern: ${document.getElementById('concernArea').value}\n\nYou will receive a confirmation within 24 hours.`);
+  document.getElementById('counsellingNote').value='';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Classroom Analytics – WizUP Faculty</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="faculty-shared.css"/>
+<style>
+.chart-wrap{position:relative;height:220px}
+.def-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.def-row:last-child{border-bottom:none}
+.def-avatar{width:38px;height:38px;border-radius:50%;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fca5a5;flex-shrink:0}
+.def-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.def-sub{font-size:11px;color:#8892b0}
+.pct-bar{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;min-width:80px}
+.pct-fill{height:100%;border-radius:3px}
+.subj-perf-card{padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(0,0,0,.2);transition:.2s}
+.subj-perf-card:hover{border-color:rgba(229,56,59,.3);background:rgba(229,56,59,.05)}
+</style>
+</head>
+<body>
+<header class="header">
+  <img src="../assets/images/LOGO1.png" alt="WizUP" class="logo"/>
+  <div class="h-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Search analytics…"/></div>
+  <div class="h-actions">
+    <div id="clock" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;color:#e5383b;margin-right:6px">00:00</div>
+    <a href="faculty-dashboard.html" class="h-btn"><i class="fa-solid fa-house"></i></a>
+    <a href="faculty-notifications.html" class="h-btn"><i class="fa-solid fa-bell"></i></a>
+    <div class="user-profile"><div class="up-avatar" id="uAvatar">F</div><div class="up-info"><span class="up-name" id="uName">Faculty</span><span class="up-role">Faculty Hub</span></div></div>
+    <button class="h-btn" onclick="doSignOut()"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+<div class="main-container">
+  <aside class="sidebar">
+    <div class="sidebar-section open"><div class="sidebar-header">ATTENDANCE<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-attendance.html">Mark Attendance</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">ACADEMICS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-timetable.html">My Timetable</a><a href="faculty-marks.html">Internal Marks</a><a href="faculty-assignments.html">Assignments</a><a href="faculty-subjects.html">Courses Assigned</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">STUDENTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-students.html">Student Monitoring</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">INSIGHTS<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-analytics.html">Analytics</a></div></div>
+    <div class="sidebar-section open"><div class="sidebar-header">PERSONAL<i class="fa-solid fa-chevron-down ch"></i></div><div class="sidebar-menu"><a href="faculty-profile.html">My Profile</a><a href="faculty-leave.html">Apply Leave</a><a href="faculty-notifications.html">Notifications</a></div></div>
+  </aside>
+
+  <main class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h2 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;display:flex;align-items:center;gap:10px">
+        <i class="fa-solid fa-chart-pie" style="color:#e5383b"></i> Classroom Analytics
+      </h2>
+      <a href="faculty-dashboard.html" style="color:#8892b0;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-users" style="color:#fca5a5"></i> Total Students</div><div class="stat-val" id="sc-total">—</div><div class="stat-sub">Across all subjects</div></div>
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-triangle-exclamation" style="color:#fcd34d"></i> Defaulters</div><div class="stat-val" id="sc-def" style="color:#fca5a5">—</div><div class="stat-sub">Below 75% attendance</div></div>
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-chart-bar" style="color:#86efac"></i> Avg Attendance</div><div class="stat-val" id="sc-avg" style="color:#86efac">—</div><div class="stat-sub">Across subjects</div></div>
+      <div class="stat-card"><div class="stat-lbl"><i class="fa-solid fa-star" style="color:#fcd34d"></i> Avg Marks (MST)</div><div class="stat-val" id="sc-marks" style="color:#fcd34d">—</div><div class="stat-sub">Out of 30</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-chart-line" style="color:#fca5a5"></i> Attendance by Subject</h3></div>
+        <div class="card-bd"><div class="chart-wrap"><canvas id="attChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-chart-bar" style="color:#fca5a5"></i> MST Marks Distribution</h3></div>
+        <div class="card-bd"><div class="chart-wrap"><canvas id="marksChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">
+        <h3><i class="fa-solid fa-triangle-exclamation" style="color:#fca5a5"></i> Attendance Defaulters (Below 75%)</h3>
+        <span style="font-size:11px;color:#8892b0" id="defCount">Loading…</span>
+      </div>
+      <div class="card-bd" id="defaulterList"><div style="text-align:center;padding:24px;color:#8892b0"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h3><i class="fa-solid fa-book" style="color:#fca5a5"></i> Subject-wise Performance</h3></div>
+      <div class="card-bd"><div class="grid3" id="subjPerf"><div style="text-align:center;padding:24px;color:#8892b0;grid-column:1/-1"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div>
+    </div>
+  </main>
+</div>
+<div id="toast-wrap"></div>
+<script src="faculty-shared.js"></script>
+<script>
+var attChartInst = null, marksChartInst = null;
+
+document.addEventListener("DOMContentLoaded", async function(){
+  var prof = await requireAuth(["faculty","hod"]);
+  if(!prof) return;
+
+  // 1. Load faculty subjects
+  var subjRes = await db.from("subjects").select("id,name,subject_code").eq("faculty_id", prof.id);
+  var subjects = subjRes.data || [];
+  if(!subjects.length){
+    document.getElementById("sc-total").textContent = "0";
+    document.getElementById("sc-def").textContent = "0";
+    document.getElementById("sc-avg").textContent = "N/A";
+    document.getElementById("sc-marks").textContent = "N/A";
+    document.getElementById("defaulterList").innerHTML = '<div style="text-align:center;padding:24px;color:#8892b0">No subjects assigned.</div>';
+    document.getElementById("subjPerf").innerHTML = '<div style="text-align:center;padding:24px;color:#8892b0;grid-column:1/-1">No subjects assigned yet.</div>';
+    return;
+  }
+
+  var subIds = subjects.map(function(s){ return s.id; });
+
+  // 2. Fetch all attendance records for these subjects
+  var attRes = await db.from("attendance").select("student_id,subject_id,status").in("subject_id", subIds);
+  var attRecords = attRes.data || [];
+
+  // 3. Fetch MST marks for these subjects
+  var marksRes = await db.from("marks").select("student_id,subject_id,marks_obtained,max_marks").eq("exam_type","mst_marks").in("subject_id", subIds);
+  var marksRecords = marksRes.data || [];
+
+  // --- Global stats ---
+  var uniqueStudents = new Set(attRecords.map(function(r){ return r.student_id; }));
+  document.getElementById("sc-total").textContent = uniqueStudents.size || "—";
+
+  // Per-student attendance across all subjects
+  var stuAtt = {};
+  attRecords.forEach(function(r){
+    if(!stuAtt[r.student_id]) stuAtt[r.student_id] = {p:0,t:0};
+    stuAtt[r.student_id].t++;
+    if(r.status==="present") stuAtt[r.student_id].p++;
+  });
+
+  var attPcts = Object.values(stuAtt).map(function(v){ return v.t>0?Math.round(v.p/v.t*100):0; });
+  var defaulterData = [];
+  Object.keys(stuAtt).forEach(function(sid){
+    var v = stuAtt[sid];
+    var pct = v.t>0?Math.round(v.p/v.t*100):0;
+    if(pct < 75) defaulterData.push({sid:sid, pct:pct});
+  });
+  document.getElementById("sc-def").textContent = defaulterData.length;
+  var avgAtt = attPcts.length ? Math.round(attPcts.reduce(function(a,b){ return a+b; },0)/attPcts.length) : 0;
+  document.getElementById("sc-avg").textContent = avgAtt ? avgAtt+"%" : "N/A";
+
+  var mstVals = marksRecords.map(function(r){ return parseFloat(r.marks_obtained)||0; });
+  var avgMST = mstVals.length ? (mstVals.reduce(function(a,b){ return a+b; },0)/mstVals.length).toFixed(1) : "N/A";
+  document.getElementById("sc-marks").textContent = avgMST;
+
+  // --- Subject-wise attendance bar chart ---
+  var subjLabels = subjects.map(function(s){ return s.subject_code; });
+  var subjAttPcts = subjects.map(function(s){
+    var recs = attRecords.filter(function(r){ return r.subject_id===s.id; });
+    var pres = recs.filter(function(r){ return r.status==="present"; }).length;
+    return recs.length ? Math.round(pres/recs.length*100) : 0;
+  });
+
+  if(attChartInst) attChartInst.destroy();
+  var ctx1 = document.getElementById("attChart").getContext("2d");
+  attChartInst = new Chart(ctx1, {type:"bar",data:{labels:subjLabels,datasets:[{label:"Attendance %",data:subjAttPcts,backgroundColor:subjAttPcts.map(function(v){ return v>=75?"rgba(34,197,94,.4)":"rgba(229,56,59,.4)"; }),borderColor:subjAttPcts.map(function(v){ return v>=75?"#22c55e":"#e5383b"; }),borderWidth:1,borderRadius:6},{label:"75% Target",data:subjLabels.map(function(){ return 75; }),type:"line",borderColor:"rgba(245,158,11,.6)",borderWidth:2,borderDash:[5,5],pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#8892b0",font:{size:11}}}},scales:{y:{min:0,max:100,grid:{color:"rgba(255,255,255,.05)"},ticks:{color:"#8892b0",font:{size:10},callback:function(v){ return v+"%"; }},border:{color:"transparent"}},x:{grid:{display:false},ticks:{color:"#8892b0",font:{size:10}},border:{color:"transparent"}}}}});
+
+  // --- MST distribution chart ---
+  var buckets = [0,0,0,0,0];
+  mstVals.forEach(function(v){
+    if(v<=10) buckets[0]++;
+    else if(v<=15) buckets[1]++;
+    else if(v<=20) buckets[2]++;
+    else if(v<=25) buckets[3]++;
+    else buckets[4]++;
+  });
+
+  if(marksChartInst) marksChartInst.destroy();
+  var ctx2 = document.getElementById("marksChart").getContext("2d");
+  marksChartInst = new Chart(ctx2, {type:"bar",data:{labels:["0–10","11–15","16–20","21–25","26–30"],datasets:[{label:"Students",data:buckets,backgroundColor:["rgba(229,56,59,.3)","rgba(245,158,11,.3)","rgba(56,189,248,.3)","rgba(34,197,94,.3)","rgba(167,139,250,.3)"],borderColor:["#e5383b","#f59e0b","#38bdf8","#22c55e","#a78bfa"],borderWidth:1,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:"rgba(255,255,255,.05)"},ticks:{color:"#8892b0",font:{size:10}},border:{color:"transparent"}},x:{grid:{display:false},ticks:{color:"#8892b0",font:{size:10}},border:{color:"transparent"}}}}});
+
+  // --- Defaulters list ---
+  // Enrich with names via profiles
+  document.getElementById("defCount").textContent = defaulterData.length+" students";
+  if(!defaulterData.length){
+    document.getElementById("defaulterList").innerHTML = '<div style="text-align:center;padding:24px;color:#86efac"><i class="fa-solid fa-circle-check" style="font-size:28px;display:block;margin-bottom:10px"></i>No defaulters — great attendance!</div>';
+  } else {
+    var defStudentIds = defaulterData.map(function(d){ return d.sid; });
+    var profRes = await db.from("profiles").select("id,full_name,roll_no").in("id", defStudentIds);
+    var profMap = {};
+    (profRes.data||[]).forEach(function(p){ profMap[p.id]=p; });
+
+    document.getElementById("defaulterList").innerHTML = defaulterData.map(function(d){
+      var p = profMap[d.sid] || {};
+      return '<div class="def-row">'
+        +'<div class="def-avatar">'+(p.full_name||"S")[0]+'</div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div class="def-name">'+(p.full_name||"Unknown")+'</div>'
+        +'<div class="def-sub">'+(p.roll_no||"N/A")+'</div>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:10px;min-width:160px">'
+        +'<div class="pct-bar"><div class="pct-fill" style="width:'+d.pct+'%;background:'+(d.pct<65?"#ef4444":"#f59e0b")+'"></div></div>'
+        +'<span style="font-size:13px;font-weight:700;color:'+(d.pct<65?"#fca5a5":"#fcd34d")+';min-width:36px">'+d.pct+'%</span>'
+        +'</div>'
+        +'<button class="btn btn-sm btn-red" onclick="showToast(\'Warning sent to '+(p.full_name||"student")+'\',\'info\')"><i class="fa-solid fa-bell"></i> Warn</button>'
+        +'</div>';
+    }).join("");
+  }
+
+  // --- Subject performance cards ---
+  document.getElementById("subjPerf").innerHTML = subjects.map(function(s){
+    var recs = attRecords.filter(function(r){ return r.subject_id===s.id; });
+    var pres = recs.filter(function(r){ return r.status==="present"; }).length;
+    var att = recs.length ? Math.round(pres/recs.length*100) : 0;
+    var subMarks = marksRecords.filter(function(r){ return r.subject_id===s.id; }).map(function(r){ return parseFloat(r.marks_obtained)||0; });
+    var avgM = subMarks.length ? (subMarks.reduce(function(a,b){ return a+b; },0)/subMarks.length).toFixed(1) : "N/A";
+    return '<div class="subj-perf-card">'
+      +'<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+s.name+'</div>'
+      +'<div style="font-size:11px;color:#8892b0;margin-bottom:8px">'+s.subject_code+' · '+recs.length+' records</div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:#8892b0;margin-bottom:4px"><span>Attendance</span><span style="color:'+(att>=75?"#86efac":"#fca5a5")+';font-weight:700">'+att+'%</span></div>'
+      +'<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:10px"><div style="width:'+att+'%;height:100%;background:'+(att>=75?"#22c55e":"#ef4444")+';border-radius:2px"></div></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:#8892b0;margin-bottom:4px"><span>Avg MST</span><span style="color:#fcd34d;font-weight:700">'+avgM+(avgM==="N/A"?"":"/30")+'</span></div>'
+      +'<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden"><div style="width:'+(avgM!=="N/A"?Math.round(parseFloat(avgM)/30*100):0)+'%;height:100%;background:#f59e0b;border-radius:2px"></div></div>'
+      +'</div>';
+  }).join("");
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Feedback System – WizUP Student</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--card:rgba(20,20,25,.72);--border:rgba(229,56,59,.15);--border2:rgba(255,255,255,.09);--muted:#8892b0;--brand:#e5383b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;font-family:'Inter',sans-serif;background:url("../assets/images/bg1.jpg") center/cover no-repeat fixed;background-color:#050505;color:#fff}
+.overlay{position:fixed;inset:0;background:radial-gradient(circle at 70% 40%,rgba(0,0,0,.15),rgba(0,0,0,.82));pointer-events:none;z-index:0}
+.topbar{display:flex;align-items:center;gap:14px;padding:12px 24px;background:rgba(0,0,0,.82);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.logo{width:44px;height:44px;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.1);overflow:hidden}
+.logo img{width:75%}
+.t-title h1{margin:0;font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;letter-spacing:1px}
+.t-title p{margin:0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.spacer{flex:1}
+.nav-link{color:#fca5a5;text-decoration:none;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;transition:.2s}
+.nav-link:hover{color:#fff}
+.container{width:min(1100px,95vw);margin:30px auto;position:relative;z-index:1;display:grid;grid-template-columns:1fr 340px;gap:20px}
+.page-wrap{position:relative;z-index:1}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);box-shadow:0 10px 30px rgba(0,0,0,.3);overflow:hidden;margin-bottom:20px}
+.card-hd{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;background:rgba(229,56,59,.05)}
+.card-hd h2{font-family:'Outfit',sans-serif;font-size:15px;font-weight:800}
+.card-bd{padding:20px}
+.tabs{display:flex;gap:8px;margin-bottom:20px}
+.tab{padding:8px 18px;border-radius:8px;border:1px solid var(--border2);background:none;color:var(--muted);cursor:pointer;font-size:12px;font-weight:700;transition:.2s;font-family:'Inter',sans-serif}
+.tab.active{background:rgba(229,56,59,.15);border-color:rgba(229,56,59,.4);color:#fca5a5}
+.subject-row{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.subject-row:last-child{border-bottom:none}
+.sub-name{flex:1;font-size:14px;font-weight:600}
+.sub-faculty{font-size:11px;color:var(--muted);margin-top:2px}
+.stars{display:flex;gap:4px}
+.star{font-size:22px;cursor:pointer;color:rgba(255,255,255,.2);transition:.15s;line-height:1}
+.star.on{color:#fbbf24}
+.star:hover{transform:scale(1.2)}
+.rating-label{font-size:11px;color:var(--muted);width:50px;text-align:right}
+.btn{background:var(--brand);color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;font-size:13px;width:100%;justify-content:center;margin-top:16px}
+.btn:hover{background:#b21f2d;transform:translateY(-1px)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;margin-bottom:6px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.form-group select,.form-group textarea,.form-group input{width:100%;padding:10px 13px;border-radius:10px;border:1px solid var(--border2);background:rgba(0,0,0,.45);color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:.2s}
+.form-group select:focus,.form-group textarea:focus,.form-group input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(229,56,59,.15)}
+.form-group select option{background:#111}
+.submitted-card{padding:20px;border:1px solid rgba(34,197,94,.3);border-radius:12px;background:rgba(34,197,94,.08);margin-bottom:12px}
+.sub-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.sub-subject{font-size:13px;font-weight:700}
+.sub-date{font-size:11px;color:var(--muted)}
+.sub-comment{font-size:12px;color:rgba(226,232,240,.8);line-height:1.5;margin-top:6px}
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-box{padding:14px;background:rgba(0,0,0,.3);border-radius:10px;border:1px solid var(--border2);text-align:center}
+.stat-box .sv{font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;margin-bottom:2px}
+.stat-box .sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.progress-bar{height:6px;background:rgba(255,255,255,.1);border-radius:99px;margin-top:8px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+@media(max-width:860px){.container{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="overlay"></div>
+<div class="topbar">
+  <div class="logo"><img src="../assets/images/LOGO1.png" alt="WizUP"/></div>
+  <div class="t-title"><h1>Feedback System</h1><p>Rate your faculty & experience</p></div>
+  <div class="spacer"></div>
+  <a href="student-dashboard.html" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+</div>
+
+<div style="position:relative;z-index:1;width:min(1100px,95vw);margin:30px auto">
+  <h2 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;margin-bottom:24px">Feedback Portal</h2>
+  <div class="container" style="margin:0;width:100%">
+
+    <!-- Left: Feedback Forms -->
+    <div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('faculty',this)">Faculty Feedback</button>
+        <button class="tab" onclick="switchTab('infra',this)">Infrastructure</button>
+        <button class="tab" onclick="switchTab('general',this)">General</button>
+      </div>
+
+      <!-- Faculty Tab -->
+      <div id="tab-faculty">
+        <div class="card">
+          <div class="card-hd"><h2><i class="fa-solid fa-chalkboard-user" style="color:#fca5a5;margin-right:8px"></i>Faculty Ratings</h2><span style="font-size:11px;color:var(--muted)">Semester VI</span></div>
+          <div class="card-bd" id="facultyList">
+            <!-- filled by JS -->
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h2><i class="fa-solid fa-comment" style="color:#fca5a5;margin-right:8px"></i>Overall Comment</h2></div>
+          <div class="card-bd">
+            <div class="form-group"><label>Your overall feedback</label><textarea id="overallComment" rows="4" placeholder="Share your overall experience about teaching quality, syllabus coverage, etc…"></textarea></div>
+            <div class="form-group"><label>Would you recommend this faculty?</label><select id="recommend"><option value="">Select…</option><option value="yes">Yes, definitely</option><option value="mostly">Mostly yes</option><option value="neutral">Neutral</option><option value="no">No</option></select></div>
+            <button class="btn" onclick="submitFacultyFeedback()"><i class="fa-solid fa-paper-plane"></i> Submit Faculty Feedback</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Infrastructure Tab -->
+      <div id="tab-infra" style="display:none">
+        <div class="card">
+          <div class="card-hd"><h2><i class="fa-solid fa-building" style="color:#fca5a5;margin-right:8px"></i>Infrastructure Feedback</h2></div>
+          <div class="card-bd">
+            <div id="infraRatings">
+              <!-- filled by JS -->
+            </div>
+            <div class="form-group" style="margin-top:14px"><label>Comments on infrastructure</label><textarea id="infraComment" rows="3" placeholder="Classrooms, labs, library, canteen, facilities…"></textarea></div>
+            <button class="btn" onclick="submitInfraFeedback()"><i class="fa-solid fa-paper-plane"></i> Submit Feedback</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- General Tab -->
+      <div id="tab-general" style="display:none">
+        <div class="card">
+          <div class="card-hd"><h2><i class="fa-solid fa-envelope" style="color:#fca5a5;margin-right:8px"></i>General Feedback</h2></div>
+          <div class="card-bd">
+            <div class="form-group"><label>Category</label><select id="genCategory"><option>Academic Policies</option><option>Exam & Evaluation</option><option>Sports & Extracurricular</option><option>Hostel & Mess</option><option>Career & Placement</option><option>Other</option></select></div>
+            <div class="form-group"><label>Subject / Topic</label><input type="text" id="genSubject" placeholder="e.g. Exam schedule conflict"/></div>
+            <div class="form-group"><label>Your Feedback</label><textarea id="genBody" rows="5" placeholder="Describe your feedback, suggestion or concern in detail…"></textarea></div>
+            <div class="form-group"><label>Priority</label><select id="genPriority"><option value="low">Low – General suggestion</option><option value="medium" selected>Medium – Should be addressed</option><option value="high">High – Urgent issue</option></select></div>
+            <button class="btn" onclick="submitGeneral()"><i class="fa-solid fa-paper-plane"></i> Submit Feedback</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Stats + History -->
+    <div>
+      <div class="card">
+        <div class="card-hd"><h2><i class="fa-solid fa-chart-simple" style="color:#fca5a5;margin-right:8px"></i>My Stats</h2></div>
+        <div class="card-bd">
+          <div class="stat-row">
+            <div class="stat-box"><div class="sv" id="totalSubmitted" style="color:#fca5a5">0</div><div class="sl">Submitted</div></div>
+            <div class="stat-box"><div class="sv" style="color:#fbbf24" id="avgRating">—</div><div class="sl">Avg Rating</div></div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Participation rate</div>
+          <div class="progress-bar"><div class="progress-fill" id="participationBar" style="width:0%"></div></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px" id="participationText">0 / 6 subjects rated</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2><i class="fa-solid fa-history" style="color:#fca5a5;margin-right:8px"></i>Recent Submissions</h2><button style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer" onclick="clearHistory()">Clear</button></div>
+        <div class="card-bd" id="historyList" style="max-height:320px;overflow-y:auto">
+          <div style="text-align:center;padding:24px;color:var(--muted);font-size:13px"><i class="fa-solid fa-inbox" style="font-size:22px;display:block;margin-bottom:8px;opacity:.4"></i>No submissions yet</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL="https://vqxhbfbpqwpdbmgtdcik.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxeGhiZmJwcXdwZGJtZ3RkY2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTY1MTMsImV4cCI6MjA4NzM5MjUxM30.U9wuwWRDsUqKef93fl0C1DLu9l_hQ5zKMT9KhOt24xE";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const KEY='wizup.feedback.v1';
+
+const FACULTY_LIST=[
+  {id:'f1',name:'Dr. Priya Mehta',subject:'Data Structures',code:'CS101'},
+  {id:'f2',name:'Prof. Arun Sharma',subject:'Operating Systems',code:'CS102'},
+  {id:'f3',name:'Dr. Kavitha Reddy',subject:'Database Systems',code:'CS103'},
+  {id:'f4',name:'Prof. Suresh Gupta',subject:'Computer Networks',code:'CS104'},
+  {id:'f5',name:'Dr. Nirmala Patel',subject:'Software Engineering',code:'CS105'},
+  {id:'f6',name:'Dr. Rajiv Singh',subject:'Machine Learning',code:'CS106'},
+];
+const INFRA_ITEMS=['Classrooms & AV Equipment','Computer Labs','Library & Reading Room','Canteen & Food Quality','Sports Facilities','Wi-Fi & Internet','Hostels & Common Areas','Parking & Transport'];
+const facultyRatings={};
+const infraRatings={};
+let history=[];
+try{history=JSON.parse(localStorage.getItem(KEY)||'[]')}catch{}
+
+function switchTab(tab,btn){
+  ['faculty','infra','general'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===tab?'':'none'});
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function renderFacultyList(){
+  document.getElementById('facultyList').innerHTML=FACULTY_LIST.map(f=>`
+  <div class="subject-row">
+    <div style="flex:1">
+      <div class="sub-name">${f.name}</div>
+      <div class="sub-faculty">${f.subject} · ${f.code}</div>
+    </div>
+    <div class="stars" id="stars-${f.id}">${[1,2,3,4,5].map(s=>`<span class="star" data-fac="${f.id}" data-val="${s}" onclick="rate('${f.id}',${s})">★</span>`).join('')}</div>
+    <div class="rating-label" id="rl-${f.id}">—</div>
+  </div>`).join('');
+  // restore
+  Object.entries(facultyRatings).forEach(([fid,val])=>setStars(fid,val));
+}
+
+function renderInfraList(){
+  document.getElementById('infraRatings').innerHTML=INFRA_ITEMS.map((item,i)=>`
+  <div class="subject-row">
+    <div class="sub-name" style="flex:1;font-size:13px">${item}</div>
+    <div class="stars" id="istars-${i}">${[1,2,3,4,5].map(s=>`<span class="star" data-item="${i}" data-val="${s}" onclick="irate(${i},${s})">★</span>`).join('')}</div>
+    <div class="rating-label" id="irl-${i}">—</div>
+  </div>`).join('');
+}
+
+function setStars(fid,val){
+  document.querySelectorAll(`[data-fac="${fid}"]`).forEach(s=>{s.classList.toggle('on',parseInt(s.dataset.val)<=val)});
+  const el=document.getElementById('rl-'+fid);
+  if(el)el.textContent=['','Poor','Fair','Good','Great','Excellent'][val]||'';
+}
+function setIStars(i,val){
+  document.querySelectorAll(`[data-item="${i}"]`).forEach(s=>{s.classList.toggle('on',parseInt(s.dataset.val)<=val)});
+  const el=document.getElementById('irl-'+i);
+  if(el)el.textContent=['','Poor','Fair','Good','Great','Excellent'][val]||'';
+}
+function rate(fid,val){facultyRatings[fid]=val;setStars(fid,val);}
+function irate(i,val){infraRatings[i]=val;setIStars(i,val);}
+
+function addHistory(type,subject,rating,comment){
+  history.unshift({type,subject,rating,comment,date:new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})});
+  localStorage.setItem(KEY,JSON.stringify(history));
+  renderHistory();
+  updateStats();
+}
+
+function renderHistory(){
+  const el=document.getElementById('historyList');
+  if(!history.length){el.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px"><i class="fa-solid fa-inbox" style="font-size:22px;display:block;margin-bottom:8px;opacity:.4"></i>No submissions yet</div>';return;}
+  el.innerHTML=history.slice(0,10).map(h=>`
+  <div class="submitted-card">
+    <div class="sub-meta">
+      <span class="sub-subject">${h.subject}</span>
+      <span class="sub-date">${h.date}</span>
+    </div>
+    ${h.rating?`<div style="color:#fbbf24;font-size:13px">${'★'.repeat(h.rating)}${'☆'.repeat(5-h.rating)}</div>`:''}
+    ${h.comment?`<div class="sub-comment">"${h.comment.substring(0,80)}${h.comment.length>80?'…':''}"</div>`:''}
+  </div>`).join('');
+}
+
+function updateStats(){
+  document.getElementById('totalSubmitted').textContent=history.length;
+  const rated=history.filter(h=>h.rating);
+  if(rated.length){const avg=(rated.reduce((a,b)=>a+(b.rating||0),0)/rated.length).toFixed(1);document.getElementById('avgRating').textContent=avg+'★';}
+  const facRated=Object.keys(facultyRatings).length;
+  const pct=Math.round(facRated/FACULTY_LIST.length*100);
+  document.getElementById('participationBar').style.width=pct+'%';
+  document.getElementById('participationText').textContent=`${facRated} / ${FACULTY_LIST.length} subjects rated`;
+}
+
+function submitFacultyFeedback(){
+  const comment=document.getElementById('overallComment').value.trim();
+  const rated=Object.keys(facultyRatings).length;
+  if(rated===0){alert('Please rate at least one faculty member.');return;}
+  FACULTY_LIST.filter(f=>facultyRatings[f.id]).forEach(f=>{
+    addHistory('Faculty',`${f.name} · ${f.subject}`,facultyRatings[f.id],comment);
+  });
+  alert('Faculty feedback submitted successfully. Thank you!');
+}
+
+function submitInfraFeedback(){
+  const comment=document.getElementById('infraComment').value.trim();
+  const rated=Object.keys(infraRatings).length;
+  if(rated===0){alert('Please rate at least one item.');return;}
+  const avg=Math.round(Object.values(infraRatings).reduce((a,b)=>a+b,0)/rated);
+  addHistory('Infrastructure','Campus Infrastructure',avg,comment);
+  alert('Infrastructure feedback submitted!');
+}
+
+function submitGeneral(){
+  const subject=document.getElementById('genSubject').value.trim();
+  const body=document.getElementById('genBody').value.trim();
+  if(!subject||!body){alert('Please fill in subject and feedback.');return;}
+  addHistory('General',subject,0,body);
+  document.getElementById('genSubject').value='';
+  document.getElementById('genBody').value='';
+  alert('General feedback submitted. Thank you!');
+}
+
+function clearHistory(){if(!confirm('Clear history?'))return;history=[];localStorage.removeItem(KEY);renderHistory();updateStats();}
+
+renderFacultyList();
+renderInfraList();
+renderHistory();
+updateStats();
+</script>
+</body>
+</html>

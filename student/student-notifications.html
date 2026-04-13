@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>University Notifications – WizUP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/premium-dashboard.css" />
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --glass: rgba(15, 23, 42, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --brand: #e5383b;
+        }
+        body { 
+            margin: 0; background: url("../assets/images/bg1.jpg") center/cover no-repeat fixed; 
+            color: #fff; font-family: 'Inter', sans-serif; min-height: 100vh; 
+        }
+        .overlay { position: fixed; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0.4), rgba(0,0,0,0.92)); pointer-events: none; z-index: 0; }
+        
+        .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand h1 { font-family: 'Outfit'; font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; position: relative; z-index: 1; }
+        
+        .hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+        .hdr h2 { font-family: 'Outfit'; font-size: 32px; font-weight: 900; }
+        
+        .clear-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 12px; color: #fca5a5; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .clear-btn:hover { background: var(--brand); color: #fff; }
+
+        .notif-list { display: flex; flex-direction: column; gap: 16px; }
+        .notif-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 20px; padding: 20px; display: flex; gap: 20px; transition: 0.3s; position: relative; overflow: hidden; }
+        .notif-card:hover { transform: translateX(10px); border-color: var(--brand); box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        
+        .notif-icon { width: 50px; height: 50px; border-radius: 14px; background: rgba(229, 56, 59, 0.1); display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--brand); flex-shrink: 0; }
+        .notif-content { flex: 1; }
+        
+        .notif-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .notif-sender { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 4px 10px; border-radius: 99px; background: rgba(255,255,255,0.05); color: #8892b0; border: 1px solid rgba(255,255,255,0.08); }
+        .notif-time { font-size: 11px; color: #8892b0; }
+        
+        .notif-title { font-family: 'Outfit'; font-size: 18px; font-weight: 800; margin-bottom: 8px; color: #fff; }
+        .notif-body { font-size: 14px; color: #8892b0; line-height: 1.6; }
+
+        .empty-state { text-align: center; padding: 100px 20px; opacity: 0.5; }
+        .empty-state i { font-size: 60px; margin-bottom: 20px; color: var(--brand); }
+        
+        .loader { text-align: center; padding: 50px; }
+        .loader i { font-size: 40px; color: var(--brand); }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="topbar">
+        <div class="brand"><i class="fa-solid fa-bell" style="color:var(--brand)"></i><h1>Notification Hub</h1></div>
+        <a href="student-dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Hub Dashboard</a>
+    </div>
+
+    <div class="container">
+        <div class="hdr">
+            <h2>Announcements</h2>
+            <button class="clear-btn" id="refreshBtn"><i class="fa-solid fa-rotate"></i> Refresh Hub</button>
+        </div>
+
+        <div id="notifList" class="notif-list">
+            <!-- Announcements dynamically injected here -->
+            <div class="loader"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+        </div>
+    </div>
+
+<script src="../assets/js/supabase.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const profile = await requireAuth(['student']);
+        if(profile) {
+            loadAnnouncements();
+        }
+
+        document.getElementById('refreshBtn').onclick = loadAnnouncements;
+    });
+
+    async function loadAnnouncements() {
+        const list = document.getElementById('notifList');
+        
+        try {
+            // 1. Fetch raw announcements and rejoin in memory (removes FK dependency)
+            const { data: rawMsgs, error: mErr } = await supabase
+                .from('announcements')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (mErr) throw mErr;
+
+            if (!rawMsgs || rawMsgs.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                        <p style="font-family:'Outfit'; font-size:22px; font-weight:800; color:#fff;">All Caught Up!</p>
+                        <p style="font-size:13px; margin-top:10px;">No new university circulars or faculty announcements found.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 2. Fetch profiles for identity attribution (including Employee ID)
+            const uids = Array.from(new Set(rawMsgs.map(m => m.posted_by).filter(id => id)));
+            const { data: profs } = await supabase
+                .from('profiles')
+                .select('id, full_name, department, role, employee_id')
+                .in('id', uids);
+
+            console.log("👤 Profiles identified:", profs);
+
+            const profMap = {};
+            if(profs) profs.forEach(p => profMap[p.id] = p);
+
+            renderAnnouncements(rawMsgs, profMap);
+        } catch (e) {
+            console.error("Critical Notif Sync Error:", e);
+            list.innerHTML = `<p style="text-align:center; color:var(--brand); padding:50px;">Failed to synchronize with university announcement cloud.</p>`;
+        }
+    }
+
+    function renderAnnouncements(items, profMap) {
+        document.getElementById('notifList').innerHTML = items.map(item => {
+            const date = new Date(item.created_at);
+            const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            let content = item.content || item.message || '';
+            let sName = 'WizUP Faculty';
+            let sId = '';
+            let sDept = 'Circular';
+            let icon = 'fa-bullhorn';
+
+            // 🛡️ Signature Extraction (Reliable Identity)
+            if(content.includes("::SIGN::")) {
+                try {
+                    const parts = content.split("::SIGN::");
+                    content = parts[0]; // The actual message
+                    const sig = parts[1].split("|"); // Name|ID|Dept
+                    sName = sig[0] || sName;
+                    sId = sig[1] || sId;
+                    sDept = sig[2] || sDept;
+                } catch(e) {}
+            } else {
+                // Fallback to Profile Cache
+                const prof = profMap[item.posted_by] || {};
+                sName = prof.full_name || sName;
+                sId = prof.employee_id || '';
+                sDept = prof.department || sDept;
+            }
+
+            if(sDept.toLowerCase().includes('faculty')) icon = 'fa-chalkboard-user';
+            
+            return `
+                <div class="notif-card">
+                    <div class="notif-icon"><i class="fa-solid ${icon}"></i></div>
+                    <div class="notif-content">
+                        <div class="notif-meta">
+                            <span class="notif-sender">${sName} ${sId ? `(${sId})` : ''}</span>
+                            <span class="notif-time">${sDept ? sDept + ' • ' : ''}${timeStr}</span>
+                        </div>
+                        <div class="notif-title">${item.title}</div>
+                        <div class="notif-body">${content}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+</script>
+</body>
+</html>
